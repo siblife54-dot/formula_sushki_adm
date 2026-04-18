@@ -143,8 +143,7 @@
   }
 
   function normalizeLesson(raw) {
-    var isLockedValue = String(raw.is_locked || "").trim();
-    var isLocked = isLockedValue === "1";
+      var isLocked = raw.is_locked === true || String(raw.is_locked || "").trim() === "1";
 
     return {
       course_id: raw.course_id,
