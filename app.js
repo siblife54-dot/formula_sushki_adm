@@ -162,26 +162,25 @@
     };
   }
 
-  async function fetchLessons(config) {
-    var url = config.useSampleData ? (config.sampleCsvPath || "./sample-sheet.csv") : config.googleSheetCsvUrl;
-    if (!url) throw new Error("Не указан CSV URL. Проверьте config.js");
+   async function fetchLessons(config) {
+    var client = window.getSupabaseClient();
 
-    var response = await fetch(url, { cache: "no-store" });
-    if (!response.ok) {
-      throw new Error("Ошибка загрузки данных. Проверьте CSV URL и публичный доступ.");
+    if (!client) {
+      throw new Error("Supabase client not initialized. Проверьте config.js и supabase.js");
     }
 
-    var text = await response.text();
-    var rows = window.CSVUtils.parseCSV(text);
+    var result = await client
+      .from("lessons")
+      .select("*")
+      .eq("course_id", config.courseId)
+      .order("day_number", { ascending: true });
 
-    return rows
-      .map(normalizeLesson)
-      .filter(function (r) {
-        return r.course_id === config.courseId;
-      })
-      .sort(function (a, b) {
-        return a.day_number - b.day_number;
-      });
+    if (result.error) {
+      console.error("Supabase load error:", result.error);
+      throw new Error("Ошибка загрузки данных из Supabase");
+    }
+
+    return (result.data || []).map(normalizeLesson);
   }
 
   function getMaxCompletedDayNumber(lessons, completed) {
