@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Админка курса</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="admin.css" />
+</head>
+<body data-page="admin">
+  <div class="admin-layout">
+    <aside class="admin-sidebar">
+      <div class="admin-sidebar__top">
+        <h1>Админка курса</h1>
+        <p id="adminCourseLabel">Загрузка...</p>
+      </div>
+
+      <button id="addLessonBtn" class="btn btn-primary" type="button">+ Добавить урок</button>
+
+      <div id="lessonsList" class="admin-lessons-list"></div>
+    </aside>
+
+    <main class="admin-main">
+      <div id="editorEmpty" class="admin-empty">
+        Выберите урок слева
+      </div>
+
+      <div id="editorPanel" hidden>
+        <div class="admin-editor-header">
+          <h2 id="editorLessonTitle">Урок</h2>
+          <button id="saveLessonBtn" class="btn btn-primary" type="button">Сохранить</button>
+        </div>
+
+        <div class="admin-form">
+          <label>
+            Lesson ID
+            <input id="lessonIdInput" type="text" />
+          </label>
+
+          <label>
+            День
+            <input id="dayNumberInput" type="number" />
+          </label>
+
+          <label>
+            Заголовок
+            <input id="titleInput" type="text" />
+          </label>
+
+          <label>
+            Подзаголовок
+            <input id="subtitleInput" type="text" />
+          </label>
+        </div>
+
+        <hr />
+
+        <div class="admin-blocks-header">
+          <h3>Блоки урока</h3>
+          <button id="addBlockBtn" class="btn btn-primary" type="button">+ Добавить блок</button>
+        </div>
+
+        <div id="blocksList" class="admin-blocks-list"></div>
+      </div>
+    </main>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>
