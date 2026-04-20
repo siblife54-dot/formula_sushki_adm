@@ -103,20 +103,15 @@
     }
 
     blocksList.innerHTML = state.blocks.map(function (block, index) {
-      var preview = "";
-
-      if (block.block_type === "html") {
-        preview = block.content_html || "";
-      } else if (block.content_json) {
-        preview = "<pre>" + escapeHtml(JSON.stringify(block.content_json, null, 2)) + "</pre>";
-      }
-
       return [
         '<div class="admin-block-item" data-block-id="' + block.id + '">',
         '<div><strong>Блок #' + (index + 1) + '</strong></div>',
         '<div>Тип: ' + escapeHtml(block.block_type || "") + '</div>',
         '<div>Порядок: ' + escapeHtml(String(block.sort_order || 0)) + '</div>',
-        '<div class="admin-block-preview" style="margin-top:12px;">' + preview + '</div>',
+        '<textarea class="admin-block-editor" data-block-id="' + block.id + '">' +
+          escapeHtml(block.content_html || "") +
+        '</textarea>',
+        '<button class="btn btn-primary save-block-btn" data-block-id="' + block.id + '">Сохранить блок</button>',
         '</div>'
       ].join("");
     }).join("");
