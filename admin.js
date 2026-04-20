@@ -144,26 +144,6 @@
       })) + 1;
     }
 
-  async function saveBlock(blockId) {
-    var client = getClient();
-    if (!client) return;
-
-    var textarea = document.querySelector('.admin-block-editor[data-block-id="' + blockId + '"]');
-    if (!textarea) return;
-
-    var newHtml = textarea.value;
-
-    var result = await client
-      .from("lesson_blocks")
-      .update({ content_html: newHtml })
-      .eq("id", blockId)
-      .select();
-
-    if (result.error) {
-      console.error(result.error);
-      alert("Ошибка сохранения блока");
-      return;
-    }
 
     var updated = result.data && result.data[0];
     if (!updated) return;
@@ -197,6 +177,27 @@
     state.blocks.push(result.data[0]);
     renderBlocksList();
   }
+
+ async function saveBlock(blockId) {
+    var client = getClient();
+    if (!client) return;
+
+    var textarea = document.querySelector('.admin-block-editor[data-block-id="' + blockId + '"]');
+    if (!textarea) return;
+
+    var newHtml = textarea.value;
+
+    var result = await client
+      .from("lesson_blocks")
+      .update({ content_html: newHtml })
+      .eq("id", blockId)
+      .select();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка сохранения блока");
+      return;
+    }
 
   function bindEvents() {
     document.getElementById("lessonsList").addEventListener("click", function (event) {
