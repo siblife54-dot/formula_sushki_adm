@@ -240,6 +240,39 @@
     alert("Блок сохранён");
   }
 
+  async function saveRichEditorBlock() {
+    if (!state.selectedBlockId) return;
+    if (!state.quill) return;
+
+    var client = getClient();
+    if (!client) return;
+
+    var html = state.quill.root.innerHTML;
+
+    var result = await client
+      .from("lesson_blocks")
+      .update({
+        text_html: html
+      })
+      .eq("id", state.selectedBlockId)
+      .select();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка сохранения блока");
+      return;
+    }
+
+    var updated = result.data && result.data[0];
+    if (!updated) return;
+
+    state.blocks = state.blocks.map(function (block) {
+      return String(block.id) === String(updated.id) ? updated : block;
+    });
+
+    alert("Текст блока сохранён");
+  }
+
   function bindEvents() {
     document.getElementById("lessonsList").addEventListener("click", function (event) {
       var button = event.target.closest("[data-lesson-db-id]");
@@ -251,6 +284,10 @@
 
     document.getElementById("addBlockBtn").addEventListener("click", function () {
       void createBlock();
+    });
+
+    document.getElementById("saveRichBlockBtn").addEventListener("click", function () {
+      void saveRichEditorBlock();
     });
 
     document.getElementById("blocksList").addEventListener("click", function (event) {
