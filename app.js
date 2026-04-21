@@ -204,6 +204,27 @@
     return result.data || [];
   }
 
+  async function fetchBlockItems(blockId) {
+    var client = window.getSupabaseClient();
+
+    if (!client) {
+      throw new Error("Supabase client not initialized");
+    }
+
+    var result = await client
+      .from("lesson_block_items")
+      .select("*")
+      .eq("block_id", blockId)
+      .order("sort_order", { ascending: true });
+
+    if (result.error) {
+      console.error("Supabase block items load error:", result.error);
+      throw new Error("Ошибка загрузки элементов блока");
+    }
+
+    return result.data || [];
+  }
+
   function getMaxCompletedDayNumber(lessons, completed) {
     var maxDay = 0;
     lessons.forEach(function (lesson) {
@@ -690,34 +711,63 @@
     var blocks = await fetchLessonBlocks(lesson.id);
 
     if (blocks.length) {
-      content.innerHTML = blocks.map(function (block) {
+      var renderedBlocks = await Promise.all(blocks.map(async function (block) {
+        var items = await fetchBlockItems(block.id);
         var html = "";
 
-        if (block.text_html) {
-          html += block.text_html;
-        }
+        if (items.length) {
+          items.forEach(function (item) {
+            if (item.item_type === "text" && item.text_html) {
+              html += item.text_html;
+            }
 
-        if (Array.isArray(block.video_items)) {
-          block.video_items.forEach(function (video) {
-            if (!video || !video.video_id) return;
+            if (item.item_type === "video" && item.video_id) {
+              html += [
+                '<div class="lesson-media">',
+                '<div class="lesson-media__frame">',
+                '<iframe',
+                'class="lesson-media__content"',
+                'src="https://kinescope.io/embed/' + escapeAttr(item.video_id) + '"',
+                'frameborder="0"',
+                'allow="autoplay; fullscreen; picture-in-picture"',
+                'allowfullscreen',
+                'loading="lazy">',
+                '</iframe>',
+                '</div>',
+                '</div>'
+              ].join(" ");
+            }
 
-            var src = "https://kinescope.io/embed/" + video.video_id;
-            html += [
-              '<div class="lesson-media">',
-              '<div class="lesson-media__frame">',
-              '<iframe class="lesson-media__content" src="' + src + '" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>',
-              '</div>',
-              '</div>'
-            ].join("");
+            if (item.item_type === "file" && item.file_id) {
+              var fileUrl = "https://drive.google.com/file/d/" + encodeURIComponent(item.file_id) + "/view?usp=sharing";
+              var fileLabel = item.file_label || "Материал";
+
+              html += [
+                '<ul class="attachments-list">',
+                '<li class="attach-item">',
+                '<a class="attach-link" href="' + escapeAttr(fileUrl) + '" target="_blank" rel="noopener noreferrer">',
+                '<span class="attach-name">' + escapeHtml(fileLabel) + '</span>',
+                '<span class="file-tag">FILE</span>',
+                '</a>',
+                '</li>',
+                '</ul>'
+              ].join("");
+            }
           });
+
+          if (html) {
+            return '<div class="lesson-block">' + html + '</div>';
+          }
         }
 
-        if (!html) {
-          return "";
+        if (block.text_html) {
+          return '<div class="lesson-block">' + block.text_html + '</div>';
         }
 
-        return '<div class="lesson-block">' + html + '</div>';
-      }).join("");
+        return "";
+      }));
+
+      content.innerHTML = renderedBlocks.join("");
     } else if (lesson.content_html) {
       content.innerHTML = lesson.content_html;
     } else {
