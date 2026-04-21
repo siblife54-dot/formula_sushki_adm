@@ -63,23 +63,36 @@
 
         <div class="admin-rich-editor" id="richEditorWrap" hidden>
           <h3>Редактор блока</h3>
+
+          <h4>Текст</h4>
           <div id="quillEditor" style="height: 260px; background: #fff; color: #111;"></div>
-          <div class="admin-block-video">
-            <label for="videoIdInput">ID видео Kinescope</label>
-            <input id="videoIdInput" type="text" placeholder="Например: 5qYpGTvDTbrLMBeBL6hpN1" />
-            <p class="admin-hint">Полная ссылка соберётся автоматически: https://kinescope.io/embed/{ID}</p>
-          </div>
           <div style="margin-top: 12px;">
-            <button id="saveRichBlockBtn" class="btn btn-primary" type="button">Сохранить из редактора</button>
+            <button id="saveRichBlockBtn" class="btn btn-primary" type="button">Сохранить текст</button>
           </div>
-          <div class="admin-block-items">
-            <h3>Элементы блока</h3>
-            <div class="admin-block-items-actions">
-              <button id="addTextItemBtn" class="btn btn-primary" type="button">+ Текст</button>
-              <button id="addVideoItemBtn" class="btn btn-primary" type="button">+ Видео</button>
-              <button id="addFileItemBtn" class="btn btn-primary" type="button">+ Файл</button>
+
+          <div class="admin-block-video" style="margin-top: 20px;">
+            <h4>Видео</h4>
+            <button id="addVideoToggleBtn" class="btn btn-primary" type="button">+ Добавить видео</button>
+            <div id="videoForm" hidden style="margin-top: 8px;">
+              <label for="videoIdInput">Video ID (Kinescope)</label>
+              <input id="videoIdInput" type="text" placeholder="Например: 5qYpGTvDTbrLMBeBL6hpN1" />
+              <p class="admin-hint">Ссылка генерируется автоматически: https://kinescope.io/embed/{ID}</p>
+              <button id="saveVideoBtn" class="btn btn-primary" type="button">Сохранить видео</button>
             </div>
-            <div id="blockItemsList" class="admin-block-items-list"></div>
+            <div id="videoCard" style="margin-top: 10px;"></div>
+          </div>
+
+          <div class="admin-block-files" style="margin-top: 20px;">
+            <h4>Файлы</h4>
+            <button id="addFileToggleBtn" class="btn btn-primary" type="button">+ Добавить файл</button>
+            <div id="fileForm" hidden style="margin-top: 8px;">
+              <label for="fileLabelInput">Название файла</label>
+              <input id="fileLabelInput" type="text" placeholder="Например: File1.pdf" />
+              <label for="fileIdInput">Google Drive file_id</label>
+              <input id="fileIdInput" type="text" placeholder="Например: 1abcDEF..." />
+              <button id="saveFileBtn" class="btn btn-primary" type="button">Сохранить файл</button>
+            </div>
+            <div id="filesList" style="margin-top: 10px;"></div>
           </div>
         </div>
 

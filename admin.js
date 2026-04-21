@@ -139,27 +139,6 @@
     }).join("");
   }
 
-  function renderBlockItemsList() {
-    var list = document.getElementById("blockItemsList");
-    if (!list) return;
-
-    if (!state.blockItems.length) {
-      list.innerHTML = '<div class="admin-empty">У блока пока нет элементов</div>';
-      return;
-    }
-
-    list.innerHTML = state.blockItems.map(function (item) {
-      var label = "Текст";
-      if (item.item_type === "video") {
-        label = "Видео: " + escapeHtml(item.video_id || "");
-      } else if (item.item_type === "file") {
-        label = "Файл: " + escapeHtml(item.file_label || "") + " (" + escapeHtml(item.file_id || "") + ")";
-      }
-
-      return '<div class="admin-block-item-row">' + label + '</div>';
-    }).join("");
-  }
-
   function initQuillEditor() {
     var editorElement = document.getElementById("quillEditor");
     if (!editorElement || state.quill) return;
@@ -179,6 +158,238 @@
     });
   }
 
+  function getNextBlockItemOrder() {
+    if (!state.blockItems.length) return 1;
+    return Math.max.apply(null, state.blockItems.map(function (item) {
+      return item.sort_order || 0;
+    })) + 1;
+  }
+
+  async function createTextItem() {
+    if (!state.selectedBlockId) return null;
+
+    var client = getClient();
+    if (!client) return null;
+
+    var result = await client
+      .from("lesson_block_items")
+      .insert({
+        block_id: state.selectedBlockId,
+        sort_order: 1,
+        item_type: "text",
+        text_html: "<p></p>"
+      })
+      .select()
+      .single();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка создания текстового элемента");
+      return null;
+    }
+
+    state.blockItems.push(result.data);
+    return result.data;
+  }
+
+  async function createVideoItem(videoId) {
+    if (!state.selectedBlockId) return null;
+    if (!videoId) return null;
+
+    var client = getClient();
+    if (!client) return null;
+
+    var nextOrder = getNextBlockItemOrder();
+    var result = await client
+      .from("lesson_block_items")
+      .insert({
+        block_id: state.selectedBlockId,
+        sort_order: nextOrder,
+        item_type: "video",
+        video_id: videoId
+      })
+      .select()
+      .single();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка создания видео");
+      return null;
+    }
+
+    state.blockItems.push(result.data);
+    return result.data;
+  }
+
+  async function createFileItem(fileLabel, fileId) {
+    if (!state.selectedBlockId) return null;
+    if (!fileLabel || !fileId) return null;
+
+    var client = getClient();
+    if (!client) return null;
+
+    var nextOrder = getNextBlockItemOrder();
+    var result = await client
+      .from("lesson_block_items")
+      .insert({
+        block_id: state.selectedBlockId,
+        sort_order: nextOrder,
+        item_type: "file",
+        file_label: fileLabel,
+        file_id: fileId
+      })
+      .select()
+      .single();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка создания файла");
+      return null;
+    }
+
+    state.blockItems.push(result.data);
+    return result.data;
+  }
+
+  async function loadTextItem() {
+    var textItem = state.blockItems.find(function (item) {
+      return item.item_type === "text";
+    });
+
+    if (!textItem) {
+      textItem = await createTextItem();
+    }
+
+    if (state.quill && textItem) {
+      state.quill.root.innerHTML = textItem.text_html || "<p></p>";
+    }
+
+    return textItem;
+  }
+
+  async function saveTextItem() {
+    if (!state.selectedBlockId || !state.quill) return;
+
+    var textItem = state.blockItems.find(function (item) {
+      return item.item_type === "text";
+    });
+
+    if (!textItem) {
+      textItem = await createTextItem();
+      if (!textItem) return;
+    }
+
+    var client = getClient();
+    if (!client) return;
+
+    var html = state.quill.root.innerHTML;
+    var result = await client
+      .from("lesson_block_items")
+      .update({ text_html: html })
+      .eq("id", textItem.id)
+      .select()
+      .single();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка сохранения текста");
+      return;
+    }
+
+    state.blockItems = state.blockItems.map(function (item) {
+      return String(item.id) === String(result.data.id) ? result.data : item;
+    });
+
+    alert("Текст сохранён");
+  }
+
+  function loadVideoItem() {
+    return state.blockItems.find(function (item) {
+      return item.item_type === "video";
+    }) || null;
+  }
+
+  function loadFiles() {
+    return state.blockItems
+      .filter(function (item) {
+        return item.item_type === "file";
+      })
+      .sort(function (a, b) {
+        return (a.sort_order || 0) - (b.sort_order || 0);
+      });
+  }
+
+  async function deleteItem(itemId) {
+    var client = getClient();
+    if (!client) return;
+
+    var result = await client
+      .from("lesson_block_items")
+      .delete()
+      .eq("id", itemId);
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка удаления");
+      return;
+    }
+
+    state.blockItems = state.blockItems.filter(function (item) {
+      return String(item.id) !== String(itemId);
+    });
+
+    renderContentSections();
+  }
+
+  function renderContentSections() {
+    renderVideoSection();
+    renderFilesSection();
+  }
+
+  function renderVideoSection() {
+    var videoItem = loadVideoItem();
+    var addVideoToggleBtn = document.getElementById("addVideoToggleBtn");
+    var videoForm = document.getElementById("videoForm");
+    var videoCard = document.getElementById("videoCard");
+
+    if (!addVideoToggleBtn || !videoForm || !videoCard) return;
+
+    if (videoItem) {
+      addVideoToggleBtn.hidden = true;
+      videoForm.hidden = true;
+      videoCard.innerHTML = [
+        '<div><strong>Видео</strong></div>',
+        '<div>ID: ' + escapeHtml(videoItem.video_id || "") + '</div>',
+        '<button class="btn delete-block-item-btn" data-item-id="' + videoItem.id + '" type="button">Удалить</button>'
+      ].join("");
+      return;
+    }
+
+    addVideoToggleBtn.hidden = false;
+    videoCard.innerHTML = '<div class="admin-empty">Видео не добавлено</div>';
+  }
+
+  function renderFilesSection() {
+    var files = loadFiles();
+    var filesList = document.getElementById("filesList");
+
+    if (!filesList) return;
+
+    if (!files.length) {
+      filesList.innerHTML = '<div class="admin-empty">Файлы не добавлены</div>';
+      return;
+    }
+
+    filesList.innerHTML = files.map(function (file) {
+      return [
+        '<div class="admin-block-item-row">',
+        '<span>' + escapeHtml(file.file_label || "Без названия") + '</span>',
+        '<button class="btn delete-block-item-btn" data-item-id="' + file.id + '" type="button">Удалить</button>',
+        '</div>'
+      ].join("");
+    }).join("");
+  }
+
   async function openBlockInRichEditor(blockId) {
     var block = state.blocks.find(function (item) {
       return String(item.id) === String(blockId);
@@ -196,18 +407,16 @@
     }
 
     state.selectedBlockId = block.id;
-    state.quill.root.innerHTML = block.text_html || "";
     state.blockItems = await fetchBlockItems(block.id);
-    renderBlockItemsList();
+
+    await loadTextItem();
 
     var videoInput = document.getElementById("videoIdInput");
     if (videoInput) {
-      if (Array.isArray(block.video_items) && block.video_items[0] && block.video_items[0].video_id) {
-        videoInput.value = block.video_items[0].video_id || "";
-      } else {
-        videoInput.value = "";
-      }
+      videoInput.value = "";
     }
+
+    renderContentSections();
   }
 
   async function selectLessonById(lessonDbId) {
@@ -222,9 +431,13 @@
     state.selectedBlockId = null;
     state.blockItems = [];
 
+    var richEditorWrap = document.getElementById("richEditorWrap");
+    if (richEditorWrap) {
+      richEditorWrap.hidden = true;
+    }
+
     renderLessonsList();
     renderEditor();
-    renderBlockItemsList();
   }
 
   async function createBlock() {
@@ -264,113 +477,6 @@
     renderBlocksList();
   }
 
-  function getNextBlockItemOrder() {
-    if (!state.blockItems.length) return 1;
-    return Math.max.apply(null, state.blockItems.map(function (item) {
-      return item.sort_order || 0;
-    })) + 1;
-  }
-
-  async function createTextItem() {
-    if (!state.selectedBlockId) return;
-
-    var client = getClient();
-    if (!client) return;
-
-    var nextOrder = getNextBlockItemOrder();
-    var result = await client
-      .from("lesson_block_items")
-      .insert({
-        block_id: state.selectedBlockId,
-        sort_order: nextOrder,
-        item_type: "text",
-        text_html: "<p>Новый текст</p>"
-      })
-      .select()
-      .single();
-
-    if (result.error) {
-      console.error(result.error);
-      alert("Ошибка создания текстового элемента");
-      return;
-    }
-
-    state.blockItems.push(result.data);
-    renderBlockItemsList();
-  }
-
-  async function createVideoItem() {
-    if (!state.selectedBlockId) return;
-
-    var videoId = window.prompt("ID видео Kinescope");
-    if (!videoId) return;
-    videoId = videoId.trim();
-    if (!videoId) return;
-
-    var client = getClient();
-    if (!client) return;
-
-    var nextOrder = getNextBlockItemOrder();
-    var result = await client
-      .from("lesson_block_items")
-      .insert({
-        block_id: state.selectedBlockId,
-        sort_order: nextOrder,
-        item_type: "video",
-        video_id: videoId
-      })
-      .select()
-      .single();
-
-    if (result.error) {
-      console.error(result.error);
-      alert("Ошибка создания видео элемента");
-      return;
-    }
-
-    state.blockItems.push(result.data);
-    renderBlockItemsList();
-  }
-
-  async function createFileItem() {
-    if (!state.selectedBlockId) return;
-
-    var fileLabel = window.prompt("Название файла");
-    if (!fileLabel) return;
-    fileLabel = fileLabel.trim();
-    if (!fileLabel) return;
-
-    var fileId = window.prompt("Google Drive file_id");
-    if (!fileId) return;
-    fileId = fileId.trim();
-    if (!fileId) return;
-
-    var client = getClient();
-    if (!client) return;
-
-    var nextOrder = getNextBlockItemOrder();
-    var result = await client
-      .from("lesson_block_items")
-      .insert({
-        block_id: state.selectedBlockId,
-        sort_order: nextOrder,
-        item_type: "file",
-        file_label: fileLabel,
-        file_id: fileId
-      })
-      .select()
-      .single();
-
-    if (result.error) {
-      console.error(result.error);
-      alert("Ошибка создания файла");
-      return;
-    }
-
-    state.blockItems.push(result.data);
-    renderBlockItemsList();
-  }
-
   async function saveBlock(blockId) {
     var client = getClient();
     if (!client) return;
@@ -402,43 +508,6 @@
     alert("Блок сохранён");
   }
 
-  async function saveRichEditorBlock() {
-    if (!state.selectedBlockId) return;
-    if (!state.quill) return;
-
-    var client = getClient();
-    if (!client) return;
-
-    var html = state.quill.root.innerHTML;
-    var videoInput = document.getElementById("videoIdInput");
-    var videoId = videoInput ? videoInput.value.trim() : "";
-    var videoItems = videoId ? [{ video_id: videoId }] : [];
-
-    var result = await client
-      .from("lesson_blocks")
-      .update({
-        text_html: html,
-        video_items: videoItems
-      })
-      .eq("id", state.selectedBlockId)
-      .select();
-
-    if (result.error) {
-      console.error(result.error);
-      alert("Ошибка сохранения блока");
-      return;
-    }
-
-    var updated = result.data && result.data[0];
-    if (!updated) return;
-
-    state.blocks = state.blocks.map(function (block) {
-      return String(block.id) === String(updated.id) ? updated : block;
-    });
-
-    alert("Текст блока сохранён");
-  }
-
   function bindEvents() {
     document.getElementById("lessonsList").addEventListener("click", function (event) {
       var button = event.target.closest("[data-lesson-db-id]");
@@ -453,19 +522,74 @@
     });
 
     document.getElementById("saveRichBlockBtn").addEventListener("click", function () {
-      void saveRichEditorBlock();
+      void saveTextItem();
     });
 
-    document.getElementById("addTextItemBtn").addEventListener("click", function () {
-      void createTextItem();
+    document.getElementById("addVideoToggleBtn").addEventListener("click", function () {
+      var videoForm = document.getElementById("videoForm");
+      if (!videoForm) return;
+      videoForm.hidden = !videoForm.hidden;
     });
 
-    document.getElementById("addVideoItemBtn").addEventListener("click", function () {
-      void createVideoItem();
+    document.getElementById("saveVideoBtn").addEventListener("click", async function () {
+      var videoInput = document.getElementById("videoIdInput");
+      if (!videoInput) return;
+
+      var videoId = videoInput.value.trim();
+      if (!videoId) {
+        alert("Введите Video ID");
+        return;
+      }
+
+      await createVideoItem(videoId);
+      videoInput.value = "";
+
+      var videoForm = document.getElementById("videoForm");
+      if (videoForm) {
+        videoForm.hidden = true;
+      }
+
+      renderVideoSection();
     });
 
-    document.getElementById("addFileItemBtn").addEventListener("click", function () {
-      void createFileItem();
+    document.getElementById("addFileToggleBtn").addEventListener("click", function () {
+      var fileForm = document.getElementById("fileForm");
+      if (!fileForm) return;
+      fileForm.hidden = !fileForm.hidden;
+    });
+
+    document.getElementById("saveFileBtn").addEventListener("click", async function () {
+      var fileLabelInput = document.getElementById("fileLabelInput");
+      var fileIdInput = document.getElementById("fileIdInput");
+      if (!fileLabelInput || !fileIdInput) return;
+
+      var fileLabel = fileLabelInput.value.trim();
+      var fileId = fileIdInput.value.trim();
+
+      if (!fileLabel || !fileId) {
+        alert("Заполните название файла и file_id");
+        return;
+      }
+
+      await createFileItem(fileLabel, fileId);
+      fileLabelInput.value = "";
+      fileIdInput.value = "";
+
+      var fileForm = document.getElementById("fileForm");
+      if (fileForm) {
+        fileForm.hidden = true;
+      }
+
+      renderFilesSection();
+    });
+
+    document.getElementById("richEditorWrap").addEventListener("click", function (event) {
+      var deleteBtn = event.target.closest(".delete-block-item-btn");
+      if (!deleteBtn) return;
+
+      var itemId = deleteBtn.getAttribute("data-item-id");
+      if (!itemId) return;
+      void deleteItem(itemId);
     });
 
     document.getElementById("blocksList").addEventListener("click", function (event) {
@@ -493,7 +617,7 @@
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
       .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
+      .replace(/\"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
 
