@@ -192,6 +192,83 @@
     return badges;
   }
 
+  function getSectionContentList(blockId) {
+    var lines = [];
+    var textItem = getTextItem(blockId);
+    var textValue = stripHtml(textItem ? textItem.text_html : "");
+    var videos = getVideoItems(blockId);
+    var files = getFileItems(blockId);
+
+    if (textValue) {
+      lines.push({ type: "text", label: "Текстовый блок" });
+    }
+
+    videos.forEach(function () {
+      lines.push({ type: "video", label: "Видео Kinescope" });
+    });
+
+    files.forEach(function (item) {
+      lines.push({ type: "file", label: "Файл: " + (item.file_label || "Без названия") });
+    });
+
+    return lines;
+  }
+
+  function renderSectionContentList(blockId) {
+    var items = getSectionContentList(blockId);
+    var limit = 4;
+
+    if (!items.length) {
+      return [
+        '<div class="admin-section-empty-state">',
+        '<p class="admin-section-empty-state__title">Секция пока пустая</p>',
+        '<div class="admin-quick-actions admin-quick-actions--empty">',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="text" type="button">Добавить текст</button>',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="video" data-open-form="1" type="button">Добавить видео</button>',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="file" data-open-form="1" type="button">Добавить файл</button>',
+        '</div>',
+        '</div>'
+      ].join("");
+    }
+
+    var visible = items.slice(0, limit);
+    var hiddenCount = items.length - visible.length;
+
+    return [
+      '<div class="admin-content-mini-list">',
+      visible.map(function (item) {
+        return [
+          '<div class="admin-content-mini-list__row">',
+          '<span class="admin-content-mini-list__dot"></span>',
+          '<span>' + escapeHtml(item.label) + '</span>',
+          '</div>'
+        ].join("");
+      }).join(""),
+      hiddenCount > 0 ? '<div class="admin-content-mini-list__more">+ ещё ' + hiddenCount + '</div>' : "",
+      '</div>'
+    ].join("");
+  }
+
+  function openSectionTab(blockId, tabName, options) {
+    var opts = options || {};
+    if (!blockId) return;
+
+    state.activeSectionId = String(blockId);
+    state.activeSectionTab = tabName || "text";
+    state.quills = {};
+
+    renderBlocksList();
+    renderPreview();
+
+    if (opts.openForm && (tabName === "video" || tabName === "file")) {
+      var formPrefix = tabName === "video" ? "videoForm-" : "fileForm-";
+      var form = document.getElementById(formPrefix + blockId);
+      if (form) {
+        form.hidden = false;
+      }
+    }
+  }
+
   function renderLessonsList() {
     var lessonsList = document.getElementById("lessonsList");
     var selectedId = state.selectedLesson ? state.selectedLesson.id : null;
@@ -264,6 +341,12 @@
         '<button class="admin-btn-ghost move-block-btn" data-dir="down" data-block-id="' + block.id + '" type="button">↓</button>',
         '<button class="admin-btn-ghost delete-block-btn" data-block-id="' + block.id + '" type="button">Удалить</button>',
         '</div>',
+        '</div>',
+        renderSectionContentList(block.id),
+        '<div class="admin-quick-actions">',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="text" type="button">+ Текст</button>',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="video" data-open-form="1" type="button">+ Видео</button>',
+        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="file" data-open-form="1" type="button">+ Файл</button>',
         '</div>',
         isActive ? renderSectionEditor(block.id) : "",
         '</article>'
@@ -876,11 +959,7 @@
     document.getElementById("blocksList").addEventListener("click", function (event) {
       var editBlockBtn = event.target.closest(".edit-block-btn");
       if (editBlockBtn) {
-        state.activeSectionId = editBlockBtn.getAttribute("data-block-id");
-        state.activeSectionTab = "text";
-        state.quills = {};
-        renderBlocksList();
-        renderPreview();
+        openSectionTab(editBlockBtn.getAttribute("data-block-id"), "text");
         return;
       }
 
@@ -895,10 +974,20 @@
 
       var tabBtn = event.target.closest(".admin-tab-btn[data-section-tab]");
       if (tabBtn) {
-        state.activeSectionId = tabBtn.getAttribute("data-block-id") || state.activeSectionId;
-        state.activeSectionTab = tabBtn.getAttribute("data-section-tab") || "text";
-        state.quills = {};
-        renderBlocksList();
+        openSectionTab(
+          tabBtn.getAttribute("data-block-id") || state.activeSectionId,
+          tabBtn.getAttribute("data-section-tab") || "text"
+        );
+        return;
+      }
+
+      var quickOpenTabBtn = event.target.closest(".quick-open-tab-btn[data-tab]");
+      if (quickOpenTabBtn) {
+        openSectionTab(
+          quickOpenTabBtn.getAttribute("data-block-id"),
+          quickOpenTabBtn.getAttribute("data-tab"),
+          { openForm: quickOpenTabBtn.getAttribute("data-open-form") === "1" }
+        );
         return;
       }
 
