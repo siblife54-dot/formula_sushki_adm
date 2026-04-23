@@ -12,7 +12,9 @@
     dnd: {
       draggedBlockId: null,
       dropTargetBlockId: null,
-      dropPosition: null
+      dropPosition: null,
+      originalOrder: null,
+      dropHappened: false
     }
   };
 
@@ -744,6 +746,8 @@
     state.dnd.draggedBlockId = null;
     state.dnd.dropTargetBlockId = null;
     state.dnd.dropPosition = null;
+    state.dnd.originalOrder = null;
+    state.dnd.dropHappened = false;
   }
 
   function clearDragOverClasses() {
@@ -754,31 +758,36 @@
     });
   }
 
-  function getReorderedBlocks(sourceId, targetId, position) {
-    var sourceIndex = state.blocks.findIndex(function (block) {
-      return String(block.id) === String(sourceId);
+  function getBlocksFromDomOrder() {
+    var cards = Array.prototype.slice.call(document.querySelectorAll("#blocksList .admin-block-item[data-block-id]"));
+    if (!cards.length) return null;
+
+    var byId = {};
+    state.blocks.forEach(function (block) {
+      byId[String(block.id)] = block;
     });
-    var targetIndex = state.blocks.findIndex(function (block) {
-      return String(block.id) === String(targetId);
-    });
 
-    if (sourceIndex < 0 || targetIndex < 0) return null;
-    if (sourceIndex === targetIndex) return null;
+    var ordered = cards.map(function (card) {
+      return byId[String(card.getAttribute("data-block-id"))];
+    }).filter(Boolean);
 
-    var ordered = state.blocks.slice();
-    var moved = ordered.splice(sourceIndex, 1)[0];
-    var insertIndex = position === "before" ? targetIndex : targetIndex + 1;
-
-    if (sourceIndex < targetIndex) {
-      insertIndex -= 1;
-    }
-
-    ordered.splice(insertIndex, 0, moved);
+    if (ordered.length !== state.blocks.length) return null;
     return ordered;
   }
 
-  async function saveBlocksOrder(orderedBlocks) {
+  function refreshBlockIndicesInDom() {
+    var cards = document.querySelectorAll("#blocksList .admin-block-item");
+    cards.forEach(function (card, index) {
+      var title = card.querySelector(".admin-block-head h4");
+      if (title) {
+        title.textContent = "Секция " + (index + 1);
+      }
+    });
+  }
+
+  async function saveBlocksOrder(orderedBlocks, options) {
     if (!orderedBlocks || !orderedBlocks.length) return;
+    var shouldRerender = !(options && options.skipRerender);
 
     var client = getClient();
     if (!client) return;
@@ -811,7 +820,11 @@
       return Object.assign({}, block, { sort_order: index + 1 });
     });
 
-    renderBlocksList();
+    if (shouldRerender) {
+      renderBlocksList();
+    } else {
+      refreshBlockIndicesInDom();
+    }
     renderPreview();
   }
 
@@ -1171,6 +1184,14 @@
       if (!blockId) return;
 
       state.dnd.draggedBlockId = blockId;
+      state.dnd.originalOrder = state.blocks.slice();
+      state.dnd.dropHappened = false;
+
+      var list = document.getElementById("blocksList");
+      if (list) {
+        list.classList.add("is-sorting");
+      }
+
       var card = handle.closest(".admin-block-item");
       if (card) {
         card.classList.add("is-dragging");
@@ -1183,45 +1204,73 @@
     });
 
     document.getElementById("blocksList").addEventListener("dragover", function (event) {
+      if (!state.dnd.draggedBlockId) return;
+      event.preventDefault();
+
+      var list = document.getElementById("blocksList");
+      if (!list) return;
+
       var targetCard = event.target.closest(".admin-block-item");
-      if (!targetCard || !state.dnd.draggedBlockId) return;
+      var draggedCard = list.querySelector('.admin-block-item[data-block-id="' + state.dnd.draggedBlockId + '"]');
+      if (!targetCard || !draggedCard) return;
 
       var targetBlockId = targetCard.getAttribute("data-block-id");
       if (!targetBlockId || String(targetBlockId) === String(state.dnd.draggedBlockId)) return;
-
-      event.preventDefault();
-
-      clearDragOverClasses();
       var rect = targetCard.getBoundingClientRect();
       var isTopHalf = event.clientY < rect.top + rect.height / 2;
-      targetCard.classList.add(isTopHalf ? "drag-over-top" : "drag-over-bottom");
+      var beforeNode = isTopHalf ? targetCard : targetCard.nextElementSibling;
+      if (beforeNode !== draggedCard) {
+        list.insertBefore(draggedCard, beforeNode);
+        refreshBlockIndicesInDom();
+      }
 
       state.dnd.dropTargetBlockId = targetBlockId;
       state.dnd.dropPosition = isTopHalf ? "before" : "after";
     });
 
     document.getElementById("blocksList").addEventListener("drop", function (event) {
-      if (!state.dnd.draggedBlockId || !state.dnd.dropTargetBlockId || !state.dnd.dropPosition) return;
+      if (!state.dnd.draggedBlockId) return;
       event.preventDefault();
 
-      var reordered = getReorderedBlocks(
-        state.dnd.draggedBlockId,
-        state.dnd.dropTargetBlockId,
-        state.dnd.dropPosition
-      );
+      state.dnd.dropHappened = true;
+      var reordered = getBlocksFromDomOrder();
 
       clearDragOverClasses();
-      resetDragAndDropState();
-
-      if (!reordered) return;
-      void saveBlocksOrder(reordered);
-    });
-
-    document.getElementById("blocksList").addEventListener("dragend", function () {
       var draggingCard = document.querySelector(".admin-block-item.is-dragging");
       if (draggingCard) {
         draggingCard.classList.remove("is-dragging");
       }
+      var list = document.getElementById("blocksList");
+      if (list) {
+        list.classList.remove("is-sorting");
+      }
+
+      if (!reordered) {
+        resetDragAndDropState();
+        return;
+      }
+
+      void saveBlocksOrder(reordered, { skipRerender: true }).finally(function () {
+        resetDragAndDropState();
+      });
+    });
+
+    document.getElementById("blocksList").addEventListener("dragend", function () {
+      var list = document.getElementById("blocksList");
+      var draggingCard = document.querySelector(".admin-block-item.is-dragging");
+      if (draggingCard) {
+        draggingCard.classList.remove("is-dragging");
+      }
+
+      if (list) {
+        list.classList.remove("is-sorting");
+      }
+
+      if (state.dnd.draggedBlockId && !state.dnd.dropHappened && state.dnd.originalOrder) {
+        state.blocks = state.dnd.originalOrder.slice();
+        renderBlocksList();
+      }
+
       clearDragOverClasses();
       resetDragAndDropState();
     });
