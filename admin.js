@@ -829,7 +829,7 @@
 
     if (deleteItemsResult.error) {
       console.error(deleteItemsResult.error);
-      alert("Ошибка удаления материалов секции");
+      alert("Ошибка удаления материалов секции!");
       return;
     }
 
