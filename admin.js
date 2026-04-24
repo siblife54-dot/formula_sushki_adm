@@ -636,7 +636,7 @@
       var contentParts = [];
 
       if (textHtml) {
-        contentParts.push('<div class="preview-text">' + textHtml + '</div>');
+        contentParts.push('<div class="preview-text"><div class="rich-text-content">' + textHtml + '</div></div>');
       }
 
       if (videos.length) {
