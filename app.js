@@ -150,6 +150,7 @@
       course_id: raw.course_id,
       lesson_id: raw.lesson_id,
       day_number: Number(raw.day_number || 0),
+      lesson_label: raw.lesson_label || "",
       is_locked: isLocked,
       title: raw.title || "Без названия",
       subtitle: raw.subtitle || "",
@@ -160,6 +161,19 @@
       content_text: raw.content_text || "",
       attachments: raw.attachments || ""
     };
+  }
+
+  function getLessonDisplayLabel(lesson) {
+    if (!lesson) return "Урок";
+
+    var customLabel = String(lesson.lesson_label || "").trim();
+    if (customLabel) return customLabel;
+
+    if (lesson.day_number) {
+      return "День " + lesson.day_number;
+    }
+
+    return "Урок";
   }
 
    async function fetchLessons(config) {
@@ -466,7 +480,7 @@
         '</div>',
         '<div class="lesson-card-body">',
         '<div class="lesson-meta">',
-        '<span class="lesson-day">День ' + (lesson.day_number || "-") + '</span>',
+        '<span class="lesson-day">' + escapeHtml(getLessonDisplayLabel(lesson)) + '</span>',
         '<div class="lesson-indicators">',
         (done ? '<span class="status done">Пройдено</span>' : ''),
         (locked ? '<span class="status locked">Закрыто</span>' : ''),
@@ -698,7 +712,7 @@
     stateBox.hidden = true;
     main.hidden = false;
 
-    document.getElementById("lessonDay").textContent = "День " + (lesson.day_number || "-");
+    document.getElementById("lessonDay").textContent = getLessonDisplayLabel(lesson);
     document.getElementById("lessonTitle").textContent = lesson.title;
     document.getElementById("lessonSubtitle").textContent = lesson.subtitle || "";
 

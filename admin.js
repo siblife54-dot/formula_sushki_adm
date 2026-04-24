@@ -175,6 +175,19 @@
     return "Пока контент не добавлен.";
   }
 
+  function getLessonDisplayLabel(lesson) {
+    if (!lesson) return "Урок";
+
+    var customLabel = String(lesson.lesson_label || "").trim();
+    if (customLabel) return customLabel;
+
+    if (lesson.day_number) {
+      return "День " + lesson.day_number;
+    }
+
+    return "Урок";
+  }
+
   function getContentBadges(blockId) {
     var badges = [];
     var textPreview = shortenText(stripHtml((getTextItem(blockId) || {}).text_html || ""), 160);
@@ -287,7 +300,7 @@
       return [
         '<button class="admin-lesson-item' + (isActive ? ' active' : '') + '" data-lesson-db-id="' + lesson.id + '" type="button">',
         '<strong>' + escapeHtml(lesson.title || "Без названия") + '</strong>',
-        '<span>День ' + escapeHtml(String(lesson.day_number || "—")) + '</span>',
+        '<span>' + escapeHtml(getLessonDisplayLabel(lesson)) + '</span>',
         '</button>'
       ].join("");
     }).join("");
@@ -312,6 +325,7 @@
     document.getElementById("editorLessonTitle").textContent = lesson.title || "Урок";
     document.getElementById("lessonIdInput").value = lesson.lesson_id || "";
     document.getElementById("dayNumberInput").value = lesson.day_number || "";
+    document.getElementById("lessonLabelInput").value = lesson.lesson_label || "";
     document.getElementById("titleInput").value = lesson.title || "";
     document.getElementById("subtitleInput").value = lesson.subtitle || "";
 
@@ -728,6 +742,7 @@
         course_id: config.courseId,
         lesson_id: "lesson-" + Date.now(),
         day_number: nextDay,
+        lesson_label: "",
         title: "Новый урок",
         subtitle: "",
         preview_image_url: null
@@ -760,6 +775,7 @@
       title: document.getElementById("titleInput").value.trim(),
       subtitle: document.getElementById("subtitleInput").value.trim(),
       day_number: Number(document.getElementById("dayNumberInput").value) || null,
+      lesson_label: document.getElementById("lessonLabelInput").value.trim(),
       lesson_id: document.getElementById("lessonIdInput").value.trim()
     };
 
@@ -1225,7 +1241,7 @@
       });
     });
 
-    ["titleInput", "subtitleInput", "dayNumberInput", "lessonIdInput"].forEach(function (id) {
+    ["titleInput", "subtitleInput", "dayNumberInput", "lessonLabelInput", "lessonIdInput"].forEach(function (id) {
       var input = document.getElementById(id);
       if (!input) return;
       input.addEventListener("input", function () {
