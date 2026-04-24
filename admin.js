@@ -915,6 +915,96 @@
     alert("Урок сохранён");
   }
 
+  async function deleteLesson() {
+    if (!state.selectedLesson) return;
+
+    var client = getClient();
+    if (!client) return;
+
+    var lessonToDelete = state.selectedLesson;
+    var confirmed = window.confirm(
+      "Удалить урок полностью? Будут удалены все секции, текст, видео и файлы этого урока. Это действие нельзя отменить."
+    );
+    if (!confirmed) return;
+
+    var lessonBlocksResult = await client
+      .from("lesson_blocks")
+      .select("id")
+      .eq("lesson_id", lessonToDelete.id);
+
+    if (lessonBlocksResult.error) {
+      console.error(lessonBlocksResult.error);
+      alert("Не удалось получить секции урока перед удалением");
+      return;
+    }
+
+    var blockIds = (lessonBlocksResult.data || []).map(function (block) {
+      return block.id;
+    });
+
+    if (blockIds.length) {
+      var deleteItemsResult = await client
+        .from("lesson_block_items")
+        .delete()
+        .in("block_id", blockIds);
+
+      if (deleteItemsResult.error) {
+        console.error(deleteItemsResult.error);
+        alert("Не удалось удалить материалы урока");
+        return;
+      }
+    }
+
+    var deleteBlocksResult = await client
+      .from("lesson_blocks")
+      .delete()
+      .eq("lesson_id", lessonToDelete.id);
+
+    if (deleteBlocksResult.error) {
+      console.error(deleteBlocksResult.error);
+      alert("Не удалось удалить секции урока");
+      return;
+    }
+
+    var deleteLessonResult = await client
+      .from("lessons")
+      .delete()
+      .eq("id", lessonToDelete.id);
+
+    if (deleteLessonResult.error) {
+      console.error(deleteLessonResult.error);
+      alert("Не удалось удалить урок");
+      return;
+    }
+
+    var storagePath = extractStoragePathFromPublicUrl(lessonToDelete.preview_image_url || "");
+    if (storagePath) {
+      var removePreviewResult = await client.storage.from("lesson-previews").remove([storagePath]);
+      if (removePreviewResult.error) {
+        console.warn("Не удалось удалить preview из Storage:", removePreviewResult.error.message);
+      }
+    }
+
+    state.lessons = state.lessons.filter(function (lesson) {
+      return String(lesson.id) !== String(lessonToDelete.id);
+    });
+
+    if (state.lessons.length) {
+      await selectLessonById(state.lessons[0].id);
+    } else {
+      state.selectedLesson = null;
+      state.blocks = [];
+      state.blockItemsByBlockId = {};
+      state.quills = {};
+      state.activeSectionId = null;
+      state.activeSectionTab = "text";
+      renderLessonsList();
+      renderEditor();
+    }
+
+    alert("Урок удалён");
+  }
+
   async function createBlock() {
     if (!state.selectedLesson) return;
 
@@ -1420,6 +1510,13 @@
 
     document.getElementById("saveLessonBtn").addEventListener("click", function () {
       void saveLesson();
+    });
+
+    document.getElementById("deleteLessonBtn").addEventListener("click", function () {
+      void deleteLesson().catch(function (error) {
+        console.error(error);
+        alert(error && error.message ? error.message : "Не удалось удалить урок");
+      });
     });
 
     document.getElementById("addBlockBtn").addEventListener("click", function () {

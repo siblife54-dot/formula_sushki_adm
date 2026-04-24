@@ -155,6 +155,24 @@ body[data-page="admin"] {
   margin: 0;
 }
 
+.admin-lesson-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.btn-danger-outline {
+  background: transparent;
+  border-color: rgba(255, 107, 129, 0.55);
+  color: #ffc8d0;
+  box-shadow: none;
+}
+
+.btn-danger-outline:hover {
+  background: rgba(255, 107, 129, 0.12);
+  border-color: rgba(255, 107, 129, 0.75);
+}
+
 .admin-form {
   margin-top: 18px;
   display: grid;
