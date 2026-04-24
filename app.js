@@ -732,7 +732,7 @@
         if (items.length) {
           items.forEach(function (item) {
             if (item.item_type === "text" && item.text_html) {
-              html += item.text_html;
+              html += '<div class="rich-text-content">' + item.text_html + '</div>';
             }
 
             if (item.item_type === "video" && item.video_id) {
@@ -775,7 +775,7 @@
         }
 
         if (block.text_html) {
-          return '<div class="lesson-block">' + block.text_html + '</div>';
+          return '<div class="lesson-block"><div class="rich-text-content">' + block.text_html + '</div></div>';
         }
 
         return "";
@@ -783,7 +783,7 @@
 
       content.innerHTML = renderedBlocks.join("");
     } else if (lesson.content_html) {
-      content.innerHTML = lesson.content_html;
+      content.innerHTML = '<div class="rich-text-content">' + lesson.content_html + '</div>';
     } else {
       content.textContent = lesson.content_text || "Содержимое урока пока пустое.";
     }
