@@ -719,7 +719,7 @@ a { color: inherit; }
 
 .rich-text-content p,
 .rich-text-content div {
-  margin: 0 0 6px 0 !important;
+  margin: 0 0 1px 0 !important;
   padding: 0 !important;
   line-height: 1.5 !important;
 }
