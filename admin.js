@@ -254,11 +254,7 @@
       return [
         '<div class="admin-section-empty-state">',
         '<p class="admin-section-empty-state__title">Секция пока пустая</p>',
-        '<div class="admin-quick-actions admin-quick-actions--empty">',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="text" type="button">Добавить текст</button>',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="video" data-open-form="1" type="button">Добавить видео</button>',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + blockId + '" data-tab="file" data-open-form="1" type="button">Добавить файл</button>',
-        '</div>',
+        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + blockId + '" type="button">Редактировать</button>',
         '</div>'
       ].join("");
     }
@@ -471,7 +467,6 @@
       var isEmptySection = !sectionItems.length;
       var summary = getSectionSummary(block.id);
       var badges = getContentBadges(block.id);
-      var shouldShowQuickActions = !isActive && !isEmptySection;
       var shouldShowBadges = !(isActive && isEmptySection);
 
       return [
@@ -497,13 +492,6 @@
         '</div>',
         '</div>',
         renderSectionContentList(block.id),
-        shouldShowQuickActions ? [
-        '<div class="admin-quick-actions">',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="text" type="button">+ Текст</button>',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="video" data-open-form="1" type="button">+ Видео</button>',
-        '<button class="admin-action-chip quick-open-tab-btn" data-block-id="' + block.id + '" data-tab="file" data-open-form="1" type="button">+ Файл</button>',
-        '</div>',
-        ].join("") : "",
         isActive ? renderSectionEditor(block.id) : "",
         '</article>'
       ].join("");
@@ -1046,7 +1034,7 @@
       return (a.sort_order || 0) - (b.sort_order || 0);
     });
     state.blockItemsByBlockId[String(result.data.id)] = [];
-    state.activeSectionId = result.data.id;
+    state.activeSectionId = null;
     state.activeSectionTab = "text";
 
     renderEditor();
@@ -1590,16 +1578,6 @@
         openSectionTab(
           tabBtn.getAttribute("data-block-id") || state.activeSectionId,
           tabBtn.getAttribute("data-section-tab") || "text"
-        );
-        return;
-      }
-
-      var quickOpenTabBtn = event.target.closest(".quick-open-tab-btn[data-tab]");
-      if (quickOpenTabBtn) {
-        openSectionTab(
-          quickOpenTabBtn.getAttribute("data-block-id"),
-          quickOpenTabBtn.getAttribute("data-tab"),
-          { openForm: quickOpenTabBtn.getAttribute("data-open-form") === "1" }
         );
         return;
       }
