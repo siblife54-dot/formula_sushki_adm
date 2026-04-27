@@ -191,6 +191,74 @@ body[data-page="admin"] {
   color: #dbe6fc;
 }
 
+.admin-label-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-tooltip-trigger {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--border) 82%, #dbe6fc 18%);
+  background: rgba(10, 20, 35, 0.78);
+  color: color-mix(in srgb, var(--muted) 78%, #ffffff 22%);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition: border-color 0.22s ease, box-shadow 0.22s ease, color 0.22s ease, transform 0.2s ease;
+}
+
+.admin-tooltip-trigger:hover,
+.admin-tooltip-trigger:focus-visible,
+.admin-tooltip-trigger.is-open {
+  border-color: color-mix(in srgb, var(--accent) 65%, #b6ceff 35%);
+  color: #eef4ff;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 32%, transparent), 0 0 14px rgba(139, 92, 246, 0.35);
+  transform: translateY(-1px);
+}
+
+.admin-tooltip-popover {
+  position: fixed;
+  width: min(320px, calc(100vw - 24px));
+  z-index: 5000;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 70%, #e9f0ff 30%);
+  background: linear-gradient(180deg, rgba(16, 30, 47, 0.96), rgba(7, 16, 29, 0.96));
+  box-shadow: 0 20px 40px rgba(3, 8, 14, 0.5), 0 6px 14px rgba(6, 12, 20, 0.44);
+  color: #e6f0ff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.admin-tooltip-popover.is-open {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.admin-tooltip-popover__title {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #ffffff;
+}
+
+.admin-tooltip-popover__body {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: #d9e7ff;
+  white-space: pre-line;
+}
+
 .admin-form input,
 .admin-section-form input {
   width: 100%;
@@ -753,6 +821,10 @@ body[data-page="admin"] {
   .admin-inline-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .admin-tooltip-popover {
+    width: min(320px, calc(100vw - 16px));
   }
 }
 

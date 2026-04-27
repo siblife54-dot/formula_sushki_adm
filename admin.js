@@ -22,6 +22,10 @@
       dropHappened: false
     }
   };
+  var tooltipState = {
+    activeTrigger: null,
+    popover: null
+  };
   var ALLOWED_PREVIEW_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
   var MAX_PREVIEW_FILE_SIZE = 5 * 1024 * 1024;
 
@@ -502,6 +506,7 @@
   }
 
   function renderBlocksList() {
+    closeTooltip();
     var blocksList = document.getElementById("blocksList");
 
     if (!state.blocks.length) {
@@ -585,11 +590,40 @@
     ].join("");
   }
 
+  function renderTooltipTrigger(options) {
+    var data = options || {};
+    return [
+      '<button class="admin-tooltip-trigger" type="button"',
+      ' aria-label="' + escapeAttr(data.ariaLabel || "Открыть подсказку") + '"',
+      ' data-tooltip-title="' + escapeAttr(data.title || "Подсказка") + '"',
+      ' data-tooltip-content="' + escapeAttr(data.content || "") + '"',
+      '>?</button>'
+    ].join("");
+  }
+
   function renderVideoTab(blockId) {
     var videos = getVideoItems(blockId);
     return [
       '<section class="admin-tab-panel">',
-      '<h5>Видео</h5>',
+      '<h5 class="admin-label-title">Видео ' + renderTooltipTrigger({
+        ariaLabel: "Подсказка: как добавить видео",
+        title: "Как добавить видео?",
+        content: [
+          "Рекомендуем Kinescope.",
+          "",
+          "Почему:",
+          "• быстро работает",
+          "• без рекламы",
+          "• отлично подходит для курсов",
+          "• удобно смотреть с телефона",
+          "",
+          "Как добавить:",
+          "1. Загрузите видео в Kinescope",
+          "2. Откройте видео",
+          "3. Скопируйте ссылку или embed-код",
+          "4. Вставьте в поле"
+        ].join("\n")
+      }) + '</h5>',
       '<button class="btn btn-primary toggle-video-form-btn" data-block-id="' + blockId + '" type="button">+ Добавить видео</button>',
       '<div class="admin-section-form" id="videoForm-' + blockId + '" hidden>',
       '<label>ID видео Kinescope',
@@ -609,7 +643,27 @@
     var files = getFileItems(blockId);
     return [
       '<section class="admin-tab-panel">',
-      '<h5>Файлы</h5>',
+      '<h5 class="admin-label-title">Файлы ' + renderTooltipTrigger({
+        ariaLabel: "Подсказка: как добавить файл",
+        title: "Как добавить файл?",
+        content: [
+          "Можно прикрепить:",
+          "",
+          "• PDF",
+          "• DOCX",
+          "• XLSX",
+          "• архив",
+          "• чек-лист",
+          "• гайд",
+          "",
+          "Как добавить:",
+          "1. Загрузите файл",
+          "2. Скопируйте ссылку",
+          "3. Вставьте в поле",
+          "",
+          "Ученик увидит кнопку скачивания."
+        ].join("\n")
+      }) + '</h5>',
       '<button class="btn btn-primary toggle-file-form-btn" data-block-id="' + blockId + '" type="button">+ Добавить файл</button>',
       '<div class="admin-section-form" id="fileForm-' + blockId + '" hidden>',
       '<label>Название файла',
@@ -1636,6 +1690,151 @@
     }
   }
 
+  function isTouchTooltipMode() {
+    return window.matchMedia("(hover: none), (pointer: coarse)").matches;
+  }
+
+  function ensureTooltipPopover() {
+    if (tooltipState.popover) return tooltipState.popover;
+
+    var popover = document.createElement("div");
+    popover.className = "admin-tooltip-popover";
+    popover.hidden = true;
+    popover.setAttribute("role", "tooltip");
+    popover.innerHTML = [
+      '<p class="admin-tooltip-popover__title"></p>',
+      '<p class="admin-tooltip-popover__body"></p>'
+    ].join("");
+    document.body.appendChild(popover);
+    tooltipState.popover = popover;
+    return popover;
+  }
+
+  function positionTooltip(trigger, popover) {
+    if (!trigger || !popover) return;
+
+    var triggerRect = trigger.getBoundingClientRect();
+    var popoverRect = popover.getBoundingClientRect();
+    var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
+    var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
+    var gap = 10;
+
+    var left = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2;
+    left = Math.max(8, Math.min(left, viewportWidth - popoverRect.width - 8));
+
+    var top = triggerRect.top - popoverRect.height - gap;
+    if (top < 8) {
+      top = triggerRect.bottom + gap;
+    }
+    if (top + popoverRect.height > viewportHeight - 8) {
+      top = Math.max(8, viewportHeight - popoverRect.height - 8);
+    }
+
+    popover.style.left = left + "px";
+    popover.style.top = top + "px";
+  }
+
+  function closeTooltip() {
+    var popover = tooltipState.popover;
+    var trigger = tooltipState.activeTrigger;
+
+    if (trigger) {
+      trigger.classList.remove("is-open");
+      trigger.setAttribute("aria-expanded", "false");
+    }
+
+    tooltipState.activeTrigger = null;
+
+    if (!popover) return;
+    popover.classList.remove("is-open");
+    popover.hidden = true;
+  }
+
+  function openTooltip(trigger) {
+    if (!trigger) return;
+    if (tooltipState.activeTrigger && tooltipState.activeTrigger !== trigger) {
+      closeTooltip();
+    }
+
+    var popover = ensureTooltipPopover();
+    var title = trigger.getAttribute("data-tooltip-title") || "Подсказка";
+    var content = trigger.getAttribute("data-tooltip-content") || "";
+
+    var titleNode = popover.querySelector(".admin-tooltip-popover__title");
+    var bodyNode = popover.querySelector(".admin-tooltip-popover__body");
+    if (titleNode) titleNode.textContent = title;
+    if (bodyNode) bodyNode.textContent = content;
+
+    popover.hidden = false;
+    positionTooltip(trigger, popover);
+    requestAnimationFrame(function () {
+      popover.classList.add("is-open");
+    });
+
+    tooltipState.activeTrigger = trigger;
+    trigger.classList.add("is-open");
+    trigger.setAttribute("aria-expanded", "true");
+  }
+
+  function initTooltips() {
+    document.addEventListener("mouseover", function (event) {
+      if (isTouchTooltipMode()) return;
+      var trigger = event.target.closest(".admin-tooltip-trigger");
+      if (!trigger) return;
+      openTooltip(trigger);
+    });
+
+    document.addEventListener("mouseout", function (event) {
+      if (isTouchTooltipMode()) return;
+      var trigger = event.target.closest(".admin-tooltip-trigger");
+      if (!trigger || trigger !== tooltipState.activeTrigger) return;
+
+      var related = event.relatedTarget;
+      var popover = tooltipState.popover;
+      if (related && (trigger.contains(related) || (popover && popover.contains(related)))) {
+        return;
+      }
+      closeTooltip();
+    });
+
+    document.addEventListener("click", function (event) {
+      var trigger = event.target.closest(".admin-tooltip-trigger");
+      if (trigger) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        if (tooltipState.activeTrigger === trigger) {
+          closeTooltip();
+        } else {
+          openTooltip(trigger);
+        }
+        return;
+      }
+
+      if (tooltipState.popover && event.target.closest(".admin-tooltip-popover")) {
+        return;
+      }
+
+      closeTooltip();
+    });
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeTooltip();
+      }
+    });
+
+    window.addEventListener("resize", function () {
+      if (!tooltipState.activeTrigger || !tooltipState.popover || tooltipState.popover.hidden) return;
+      positionTooltip(tooltipState.activeTrigger, tooltipState.popover);
+    });
+
+    window.addEventListener("scroll", function () {
+      if (!tooltipState.activeTrigger || !tooltipState.popover || tooltipState.popover.hidden) return;
+      positionTooltip(tooltipState.activeTrigger, tooltipState.popover);
+    }, true);
+  }
+
   function bindEvents() {
     document.getElementById("lessonsList").addEventListener("click", function (event) {
       if (event.target.closest(".lesson-drag-handle")) return;
@@ -2049,6 +2248,7 @@
   async function init() {
     document.getElementById("adminCourseLabel").textContent = getConfig().courseId || "Без course_id";
 
+    initTooltips();
     bindEvents();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
