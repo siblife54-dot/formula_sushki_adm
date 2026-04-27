@@ -760,3 +760,24 @@ a { color: inherit; }
 .rich-text-content p:first-child {
   margin-top: 0 !important;
 }
+
+.lesson-inline-image {
+  width: 100%;
+  margin: 14px 0 18px;
+}
+
+.lesson-inline-image img {
+  width: 100%;
+  max-width: 100%;
+  display: block;
+  border-radius: 16px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.lesson-inline-image figcaption {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.4;
+}

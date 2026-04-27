@@ -767,6 +767,15 @@
                 '</ul>'
               ].join("");
             }
+
+            if (item.item_type === "image" && item.image_url) {
+              html += [
+                '<figure class="lesson-inline-image">',
+                '<img src="' + escapeAttr(item.image_url) + '" alt="' + escapeAttr(item.image_alt || "Изображение урока") + '" loading="lazy">',
+                item.image_alt ? '<figcaption>' + escapeHtml(item.image_alt) + '</figcaption>' : "",
+                '</figure>'
+              ].join("");
+            }
           });
 
           if (html) {
