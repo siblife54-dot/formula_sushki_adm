@@ -182,6 +182,12 @@
     });
   }
 
+  function getImageItems(blockId) {
+    return getItems(blockId).filter(function (item) {
+      return item.item_type === "image" && item.image_url;
+    });
+  }
+
   function getNextBlockItemOrder(blockId) {
     var items = getItems(blockId);
     if (!items.length) return 1;
@@ -291,6 +297,7 @@
     var textItem = getTextItem(blockId);
     var videos = getVideoItems(blockId);
     var files = getFileItems(blockId);
+    var images = getImageItems(blockId);
     var textPreview = shortenText(stripHtml(textItem ? textItem.text_html : ""), 160);
 
     if (textPreview) {
@@ -301,12 +308,20 @@
       return "Секция содержит видео и файлы для скачивания.";
     }
 
+    if (images.length && (videos.length || files.length)) {
+      return "Секция содержит изображения и медиа-контент.";
+    }
+
     if (videos.length) {
       return "Секция с видеоматериалом.";
     }
 
     if (files.length) {
       return "Секция с прикреплёнными файлами.";
+    }
+
+    if (images.length) {
+      return "Секция с изображениями.";
     }
 
     return "Пока контент не добавлен.";
@@ -330,6 +345,7 @@
     var textPreview = shortenText(stripHtml((getTextItem(blockId) || {}).text_html || ""), 160);
     var videos = getVideoItems(blockId);
     var files = getFileItems(blockId);
+    var images = getImageItems(blockId);
 
     if (textPreview) {
       badges.push("Текст");
@@ -342,6 +358,9 @@
         return item.file_label || "Без названия";
       }).join(", ");
       badges.push("Файлы: " + fileNames + (files.length > 2 ? " +" + (files.length - 2) : ""));
+    }
+    if (images.length) {
+      badges.push("Картинки: " + images.length);
     }
 
     if (!badges.length) {
@@ -357,6 +376,7 @@
     var textValue = stripHtml(textItem ? textItem.text_html : "");
     var videos = getVideoItems(blockId);
     var files = getFileItems(blockId);
+    var images = getImageItems(blockId);
 
     if (textValue) {
       lines.push({ type: "text", label: "Текстовый блок" });
@@ -368,6 +388,10 @@
 
     files.forEach(function (item) {
       lines.push({ type: "file", label: "Файл: " + (item.file_label || "Без названия") });
+    });
+
+    images.forEach(function (item) {
+      lines.push({ type: "image", label: "Картинка: " + (item.image_alt || "Без подписи") });
     });
 
     return lines;
@@ -415,8 +439,8 @@
     renderBlocksList();
     renderPreview();
 
-    if (opts.openForm && (tabName === "video" || tabName === "file")) {
-      var formPrefix = tabName === "video" ? "videoForm-" : "fileForm-";
+    if (opts.openForm && (tabName === "video" || tabName === "file" || tabName === "image")) {
+      var formPrefix = tabName === "video" ? "videoForm-" : (tabName === "file" ? "fileForm-" : "imageForm-");
       var form = document.getElementById(formPrefix + blockId);
       if (form) {
         form.hidden = false;
@@ -640,6 +664,7 @@
       '<button class="admin-tab-btn' + (state.activeSectionTab === 'text' ? ' active' : '') + '" type="button" data-section-tab="text" data-block-id="' + blockId + '">Текст</button>',
       '<button class="admin-tab-btn' + (state.activeSectionTab === 'video' ? ' active' : '') + '" type="button" data-section-tab="video" data-block-id="' + blockId + '">Видео</button>',
       '<button class="admin-tab-btn' + (state.activeSectionTab === 'file' ? ' active' : '') + '" type="button" data-section-tab="file" data-block-id="' + blockId + '">Файлы</button>',
+      '<button class="admin-tab-btn' + (state.activeSectionTab === 'image' ? ' active' : '') + '" type="button" data-section-tab="image" data-block-id="' + blockId + '">+ Картинка</button>',
       '<button class="admin-btn-ghost close-inline-editor-btn" type="button">Закрыть</button>',
       '</div>',
       renderSectionTabContent(blockId),
@@ -650,6 +675,7 @@
   function renderSectionTabContent(blockId) {
     if (state.activeSectionTab === "video") return renderVideoTab(blockId);
     if (state.activeSectionTab === "file") return renderFileTab(blockId);
+    if (state.activeSectionTab === "image") return renderImageTab(blockId);
     return renderTextTab(blockId);
   }
 
@@ -758,6 +784,33 @@
     ].join("");
   }
 
+  function renderImageTab(blockId) {
+    var images = getImageItems(blockId);
+    return [
+      '<section class="admin-tab-panel">',
+      '<div class="admin-panel-head">',
+      '<h5>Картинка</h5>',
+      '<div class="admin-panel-actions">',
+      '<button class="btn btn-primary toggle-image-form-btn" data-block-id="' + blockId + '" type="button">+ Добавить картинку</button>',
+      '</div>',
+      '</div>',
+      '<div class="admin-section-form" id="imageForm-' + blockId + '" hidden>',
+      '<p class="admin-hint admin-image-upload-hint">Рекомендуемый формат: JPG или PNG.<br>Лучше использовать ширину от 1200 px.<br>Горизонтальные, квадратные и вертикальные изображения поддерживаются.<br>Можно загружать JPG, PNG или WEBP размером до 5 MB.</p>',
+      '<label>Файл изображения',
+      '<input class="image-file-input" data-block-id="' + blockId + '" type="file" accept="image/png,image/jpeg,image/webp" />',
+      '</label>',
+      '<label>Подпись (необязательно)',
+      '<input class="image-alt-input" data-block-id="' + blockId + '" type="text" placeholder="Например: Схема питания на неделю" />',
+      '</label>',
+      '<button class="btn btn-primary save-image-btn" data-block-id="' + blockId + '" type="button">Загрузить картинку</button>',
+      '</div>',
+      '<div class="admin-mini-cards">',
+      renderImageCards(images),
+      '</div>',
+      '</section>'
+    ].join("");
+  }
+
   function renderVideoCards(videos) {
     if (!videos.length) {
       return '<div class="admin-empty">Видео не добавлено</div>';
@@ -790,6 +843,22 @@
     }).join("");
   }
 
+  function renderImageCards(images) {
+    if (!images.length) {
+      return '<div class="admin-empty">Картинки не добавлены</div>';
+    }
+
+    return images.map(function (image) {
+      return [
+        '<div class="admin-mini-card admin-mini-card--image">',
+        '<div class="admin-mini-card__image-wrap"><img src="' + escapeAttr(image.image_url || "") + '" alt="' + escapeAttr(image.image_alt || "Изображение урока") + '"></div>',
+        image.image_alt ? '<p><strong>' + escapeHtml(image.image_alt) + '</strong></p>' : '<p><strong>Без подписи</strong></p>',
+        '<button class="admin-btn-ghost delete-item-btn" data-item-id="' + image.id + '" type="button">Удалить</button>',
+        '</div>'
+      ].join("");
+    }).join("");
+  }
+
   function renderPreview() {
     var container = document.getElementById("previewContainer");
     if (!container) return;
@@ -808,6 +877,7 @@
       var textHtml = textItem && stripHtml(textItem.text_html) ? textItem.text_html : "";
       var videos = getVideoItems(block.id);
       var files = getFileItems(block.id);
+      var images = getImageItems(block.id);
 
       var contentParts = [];
 
@@ -829,6 +899,17 @@
           }).join(""),
           '</div>'
         ].join(""));
+      }
+
+      if (images.length) {
+        contentParts.push(images.map(function (image) {
+          return [
+            '<figure class="preview-inline-image">',
+            '<img src="' + escapeAttr(image.image_url || "") + '" alt="' + escapeAttr(image.image_alt || "Изображение секции") + '">',
+            image.image_alt ? '<figcaption>' + escapeHtml(image.image_alt) + '</figcaption>' : "",
+            '</figure>'
+          ].join("");
+        }).join(""));
       }
 
       if (!contentParts.length) {
@@ -893,9 +974,9 @@
     return result.data;
   }
 
-  function extractStoragePathFromPublicUrl(publicUrl) {
+  function extractStoragePathFromPublicUrl(publicUrl, bucketName) {
     if (!publicUrl) return null;
-    var marker = "/storage/v1/object/public/lesson-previews/";
+    var marker = "/storage/v1/object/public/" + (bucketName || "lesson-previews") + "/";
     var markerIndex = publicUrl.indexOf(marker);
     if (markerIndex === -1) return null;
     return decodeURIComponent(publicUrl.slice(markerIndex + marker.length));
@@ -933,6 +1014,43 @@
     var publicUrl = publicResult && publicResult.data ? publicResult.data.publicUrl : "";
     if (!publicUrl) {
       throw new Error("Не удалось получить public URL файла");
+    }
+
+    return { publicUrl: publicUrl, filePath: filePath };
+  }
+
+  async function uploadSectionImage(blockId, file) {
+    if (!state.selectedLesson) {
+      throw new Error("Сначала выберите урок");
+    }
+
+    var validation = validateImageFile(file);
+    if (!validation.isValid) {
+      throw new Error(validation.message);
+    }
+
+    var client = getClient();
+    var config = getConfig();
+    if (!client) throw new Error("Supabase client not initialized");
+
+    var folderCourseId = config.courseId || state.selectedLesson.course_id || "course";
+    var folderLessonId = state.selectedLesson.lesson_id || String(state.selectedLesson.id);
+    var safeName = sanitizeFileName(file.name || "lesson-image");
+    var filePath = folderCourseId + "/" + folderLessonId + "/" + String(blockId) + "/" + Date.now() + "_" + safeName;
+
+    var uploadResult = await client.storage
+      .from("lesson-images")
+      .upload(filePath, file, { upsert: false, contentType: file.type });
+
+    if (uploadResult.error) {
+      console.error(uploadResult.error);
+      throw new Error("Ошибка загрузки картинки в Storage");
+    }
+
+    var publicResult = client.storage.from("lesson-images").getPublicUrl(filePath);
+    var publicUrl = publicResult && publicResult.data ? publicResult.data.publicUrl : "";
+    if (!publicUrl) {
+      throw new Error("Не удалось получить public URL картинки");
     }
 
     return { publicUrl: publicUrl, filePath: filePath };
@@ -1718,9 +1836,47 @@
     renderPreview();
   }
 
+  async function createImageItem(blockId, imageUrl, imageAlt) {
+    if (!imageUrl) return null;
+
+    var client = getClient();
+    if (!client) return null;
+
+    var result = await client
+      .from("lesson_block_items")
+      .insert({
+        block_id: blockId,
+        sort_order: getNextBlockItemOrder(blockId),
+        item_type: "image",
+        image_url: imageUrl,
+        image_alt: imageAlt || null
+      })
+      .select()
+      .single();
+
+    if (result.error) {
+      console.error(result.error);
+      alert("Ошибка сохранения картинки в секции");
+      return null;
+    }
+
+    getItems(blockId).push(result.data);
+    renderBlocksList();
+    renderPreview();
+    return result.data;
+  }
+
   async function deleteItem(itemId) {
     var client = getClient();
     if (!client) return;
+
+    var itemToDelete = null;
+    Object.keys(state.blockItemsByBlockId).forEach(function (key) {
+      var found = (state.blockItemsByBlockId[key] || []).find(function (item) {
+        return String(item.id) === String(itemId);
+      });
+      if (found) itemToDelete = found;
+    });
 
     var result = await client
       .from("lesson_block_items")
@@ -1738,6 +1894,16 @@
         return String(item.id) !== String(itemId);
       });
     });
+
+    if (itemToDelete && itemToDelete.item_type === "image" && itemToDelete.image_url) {
+      var storagePath = extractStoragePathFromPublicUrl(itemToDelete.image_url, "lesson-images");
+      if (storagePath) {
+        var removeResult = await client.storage.from("lesson-images").remove([storagePath]);
+        if (removeResult.error) {
+          console.warn("Не удалось удалить картинку из Storage:", removeResult.error.message);
+        }
+      }
+    }
 
     renderBlocksList();
     renderPreview();
@@ -2214,6 +2380,44 @@
         }
 
         void createFileItem(fileBlockId, fileLabel, fileId);
+        return;
+      }
+
+      var toggleImageFormBtn = event.target.closest(".toggle-image-form-btn");
+      if (toggleImageFormBtn) {
+        var imageForm = document.getElementById("imageForm-" + toggleImageFormBtn.getAttribute("data-block-id"));
+        if (imageForm) {
+          imageForm.hidden = !imageForm.hidden;
+        }
+        return;
+      }
+
+      var saveImageBtn = event.target.closest(".save-image-btn");
+      if (saveImageBtn) {
+        var imageBlockId = saveImageBtn.getAttribute("data-block-id");
+        var imageFileInput = document.querySelector('.image-file-input[data-block-id="' + imageBlockId + '"]');
+        var imageAltInput = document.querySelector('.image-alt-input[data-block-id="' + imageBlockId + '"]');
+        var imageFile = imageFileInput && imageFileInput.files ? imageFileInput.files[0] : null;
+        var imageAlt = imageAltInput ? imageAltInput.value.trim() : "";
+
+        if (!imageFile) {
+          alert("Выберите файл картинки перед загрузкой");
+          return;
+        }
+
+        void uploadSectionImage(imageBlockId, imageFile).then(function (uploadResult) {
+          return createImageItem(imageBlockId, uploadResult.publicUrl, imageAlt).then(function (createdItem) {
+            if (!createdItem) return;
+            if (imageFileInput) imageFileInput.value = "";
+            if (imageAltInput) imageAltInput.value = "";
+            var imageForm = document.getElementById("imageForm-" + imageBlockId);
+            if (imageForm) imageForm.hidden = true;
+            alert("Картинка загружена");
+          });
+        }).catch(function (error) {
+          console.error(error);
+          alert(error && error.message ? error.message : "Не удалось загрузить картинку");
+        });
         return;
       }
 
