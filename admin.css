@@ -151,6 +151,125 @@ body[data-page="admin"] {
   padding: 24px;
 }
 
+.admin-theme-card {
+  margin-bottom: 18px;
+}
+
+.admin-card__header--compact {
+  margin-bottom: 0;
+}
+
+.admin-theme-grid {
+  margin-top: 16px;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+}
+
+.admin-theme-item {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: rgba(8, 18, 34, 0.42);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.admin-theme-item.is-active {
+  border-color: color-mix(in srgb, var(--accent) 72%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent);
+}
+
+.admin-theme-item h3 {
+  margin: 0;
+  font-size: 15px;
+}
+
+.admin-theme-item p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.admin-theme-status {
+  font-size: 12px;
+  color: color-mix(in srgb, var(--accent) 70%, #fff 30%);
+  font-weight: 600;
+}
+
+.admin-theme-choose-btn {
+  width: fit-content;
+  min-height: 34px;
+  padding: 6px 12px;
+}
+
+.admin-theme-preview {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  height: 54px;
+  padding: 8px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 6px;
+}
+
+.admin-theme-preview span {
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.admin-theme-preview.theme-dark-premium {
+  background: #0E1B2B;
+}
+
+.admin-theme-preview.theme-dark-premium span:nth-child(2) {
+  background: #8B5CF6;
+}
+
+.admin-theme-preview.theme-light-clean {
+  background: #F6F7FB;
+}
+
+.admin-theme-preview.theme-light-clean span {
+  background: #cbd5e1;
+}
+
+.admin-theme-preview.theme-light-clean span:nth-child(2) {
+  background: #2563EB;
+}
+
+.admin-theme-preview.theme-fitness-power {
+  background: #031812;
+}
+
+.admin-theme-preview.theme-fitness-power span:nth-child(2) {
+  background: #67F08F;
+}
+
+.admin-theme-preview.theme-soft-women {
+  background: #FFF7F2;
+}
+
+.admin-theme-preview.theme-soft-women span {
+  background: #f7d8cc;
+}
+
+.admin-theme-preview.theme-soft-women span:nth-child(2) {
+  background: #E8799A;
+}
+
+.admin-theme-preview.theme-business-black {
+  background: #080808;
+}
+
+.admin-theme-preview.theme-business-black span {
+  background: #3f3f46;
+}
+
+.admin-theme-preview.theme-business-black span:nth-child(2) {
+  background: #D4AF37;
+}
+
 .admin-card__header {
   display: flex;
   justify-content: space-between;
