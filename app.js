@@ -34,10 +34,11 @@
   }
 
   function applyTheme(config, themeId) {
-    var classNames = Object.keys(WEBAPP_THEME_IDS).map(function (id) {
-      return WEBAPP_THEME_IDS[id];
+    Array.from(document.body.classList).forEach(function (className) {
+      if (className.indexOf("theme-") === 0) {
+        document.body.classList.remove(className);
+      }
     });
-    document.body.classList.remove.apply(document.body.classList, classNames);
     document.body.classList.add(WEBAPP_THEME_IDS[normalizeThemeId(themeId)]);
 
     var brand = document.getElementById("brandName");
@@ -51,13 +52,13 @@
     }
 
     var result = await client
-      .from("courses")
+      .from("course_settings")
       .select("theme_id")
       .eq("course_id", config.courseId)
       .maybeSingle();
 
     if (result.error) {
-      console.error("Supabase course theme load error:", result.error);
+      console.warn("Supabase course_settings load error:", result.error);
       return "dark_premium";
     }
 
