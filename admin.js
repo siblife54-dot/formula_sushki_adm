@@ -4,6 +4,7 @@
   var state = {
     lessons: [],
     selectedLesson: null,
+    courseThemeId: "dark_premium",
     blocks: [],
     blockItemsByBlockId: {},
     quills: {},
@@ -28,6 +29,20 @@
   };
   var ALLOWED_PREVIEW_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
   var MAX_PREVIEW_FILE_SIZE = 5 * 1024 * 1024;
+  var WEBAPP_THEME_IDS = {
+    dark_premium: "theme-dark-premium",
+    light_clean: "theme-light-clean",
+    fitness_power: "theme-fitness-power",
+    soft_women: "theme-soft-women",
+    business_black: "theme-business-black"
+  };
+  var WEBAPP_THEMES = [
+    { id: "dark_premium", name: "Dark Premium", description: "Тёмно-синий фон с фиолетовым акцентом" },
+    { id: "light_clean", name: "Light Clean", description: "Светлый минимализм" },
+    { id: "fitness_power", name: "Fitness Power", description: "Тёмный зелёный фитнес-стиль" },
+    { id: "soft_women", name: "Soft Women", description: "Светлый нюд/розовый стиль" },
+    { id: "business_black", name: "Business Black", description: "Графит/чёрный/золото" }
+  ];
 
   function generateLessonId() {
     var randomSuffix = Math.random().toString(36).slice(2, 6);
@@ -87,6 +102,72 @@
 
   function getClient() {
     return window.getSupabaseClient();
+  }
+
+  function normalizeThemeId(themeId) {
+    var value = String(themeId || "").trim();
+    if (WEBAPP_THEME_IDS[value]) return value;
+    return "dark_premium";
+  }
+
+  function renderThemeCards() {
+    var container = document.getElementById("themeCards");
+    if (!container) return;
+
+    container.innerHTML = WEBAPP_THEMES.map(function (theme) {
+      var isActive = state.courseThemeId === theme.id;
+      return [
+        '<article class="admin-theme-item' + (isActive ? ' is-active' : '') + '" data-theme-id="' + theme.id + '">',
+        '<div class="admin-theme-preview ' + WEBAPP_THEME_IDS[theme.id] + '"><span></span><span></span><span></span></div>',
+        '<h3>' + escapeHtml(theme.name) + '</h3>',
+        '<p>' + escapeHtml(theme.description) + '</p>',
+        isActive
+          ? '<div class="admin-theme-status">Выбран</div>'
+          : '<button class="btn btn-primary admin-theme-choose-btn" type="button" data-theme-id="' + theme.id + '">Выбрать</button>',
+        '</article>'
+      ].join("");
+    }).join("");
+  }
+
+  async function fetchCourseThemeId() {
+    var client = getClient();
+    var config = getConfig();
+    if (!client) throw new Error("Supabase client not initialized");
+
+    var result = await client
+      .from("courses")
+      .select("theme_id")
+      .eq("course_id", config.courseId)
+      .maybeSingle();
+
+    if (result.error) {
+      console.error(result.error);
+      return "dark_premium";
+    }
+
+    return normalizeThemeId(result.data && result.data.theme_id);
+  }
+
+  async function saveCourseThemeId(themeId) {
+    var client = getClient();
+    var config = getConfig();
+    if (!client) throw new Error("Supabase client not initialized");
+
+    var normalized = normalizeThemeId(themeId);
+    var result = await client
+      .from("courses")
+      .update({ theme_id: normalized })
+      .eq("course_id", config.courseId)
+      .select("theme_id")
+      .maybeSingle();
+
+    if (result.error) {
+      console.error(result.error);
+      throw new Error("Не удалось сохранить тему курса");
+    }
+
+    state.courseThemeId = normalizeThemeId(result.data && result.data.theme_id);
+    renderThemeCards();
   }
 
   async function fetchLessons() {
@@ -2067,6 +2148,24 @@
   }
 
   function bindEvents() {
+    var themeCards = document.getElementById("themeCards");
+    if (themeCards) {
+      themeCards.addEventListener("click", function (event) {
+        var themeBtn = event.target.closest(".admin-theme-choose-btn");
+        if (!themeBtn) return;
+
+        var themeId = themeBtn.getAttribute("data-theme-id");
+        if (!themeId || themeId === state.courseThemeId) return;
+
+        void saveCourseThemeId(themeId).then(function () {
+          alert("Тема WebApp сохранена");
+        }).catch(function (error) {
+          console.error(error);
+          alert(error && error.message ? error.message : "Не удалось сохранить тему");
+        });
+      });
+    }
+
     document.getElementById("lessonsList").addEventListener("click", function (event) {
       if (event.target.closest(".lesson-drag-handle")) return;
       if (event.target.closest(".duplicate-lesson-btn")) return;
@@ -2494,6 +2593,8 @@
 
     initTooltips();
     bindEvents();
+    state.courseThemeId = await fetchCourseThemeId();
+    renderThemeCards();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
       if (typeof lesson.preview_image_url === "undefined") {

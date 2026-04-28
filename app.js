@@ -15,19 +15,53 @@
     activeStorage: "local",
     migratedLocalToCloud: false
   };
+  var WEBAPP_THEME_IDS = {
+    dark_premium: "theme-dark-premium",
+    light_clean: "theme-light-clean",
+    fitness_power: "theme-fitness-power",
+    soft_women: "theme-soft-women",
+    business_black: "theme-business-black"
+  };
 
   function getConfig() {
     return window.APP_CONFIG || {};
   }
 
-  function applyTheme(config) {
-    var root = document.documentElement;
-    root.style.setProperty("--accent", config.accentColor || "#8B5CF6");
-    root.style.setProperty("--bg", config.backgroundColor || "#0E1B2B");
-    root.style.setProperty("--card", config.cardColor || "#12243a");
+  function normalizeThemeId(themeId) {
+    var value = String(themeId || "").trim();
+    if (WEBAPP_THEME_IDS[value]) return value;
+    return "dark_premium";
+  }
+
+  function applyTheme(config, themeId) {
+    var classNames = Object.keys(WEBAPP_THEME_IDS).map(function (id) {
+      return WEBAPP_THEME_IDS[id];
+    });
+    document.body.classList.remove.apply(document.body.classList, classNames);
+    document.body.classList.add(WEBAPP_THEME_IDS[normalizeThemeId(themeId)]);
 
     var brand = document.getElementById("brandName");
     if (brand) brand.textContent = config.brandName || "Кабинет курса";
+  }
+
+  async function fetchCourseThemeId(config) {
+    var client = window.getSupabaseClient();
+    if (!client) {
+      throw new Error("Supabase client not initialized. Проверьте config.js и supabase.js");
+    }
+
+    var result = await client
+      .from("courses")
+      .select("theme_id")
+      .eq("course_id", config.courseId)
+      .maybeSingle();
+
+    if (result.error) {
+      console.error("Supabase course theme load error:", result.error);
+      return "dark_premium";
+    }
+
+    return normalizeThemeId(result.data && result.data.theme_id);
   }
 
   function initTelegramViewport() {
@@ -898,7 +932,13 @@
 
   async function init() {
     var config = getConfig();
-    applyTheme(config);
+    var themeId = "dark_premium";
+    try {
+      themeId = await fetchCourseThemeId(config);
+    } catch (error) {
+      console.error(error);
+    }
+    applyTheme(config, themeId);
     initTelegramViewport();
     await initStorage();
     APP_PROFILE = getProfile();
