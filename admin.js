@@ -4,7 +4,7 @@
   var state = {
     lessons: [],
     selectedLesson: null,
-    courseThemeId: "dark_premium",
+    selectedThemeId: "dark_premium",
     blocks: [],
     blockItemsByBlockId: {},
     quills: {},
@@ -115,7 +115,7 @@
     if (!container) return;
 
     container.innerHTML = WEBAPP_THEMES.map(function (theme) {
-      var isActive = state.courseThemeId === theme.id;
+      var isActive = state.selectedThemeId === theme.id;
       return [
         '<article class="admin-theme-item' + (isActive ? ' is-active' : '') + '" data-theme-id="' + theme.id + '">',
         '<div class="admin-theme-preview ' + WEBAPP_THEME_IDS[theme.id] + '"><span></span><span></span><span></span></div>',
@@ -135,7 +135,7 @@
     if (!client) throw new Error("Supabase client not initialized");
 
     var result = await client
-      .from("courses")
+      .from("course_settings")
       .select("theme_id")
       .eq("course_id", config.courseId)
       .maybeSingle();
@@ -145,7 +145,26 @@
       return "dark_premium";
     }
 
-    return normalizeThemeId(result.data && result.data.theme_id);
+    var themeId = normalizeThemeId(result.data && result.data.theme_id);
+    if (result.data) {
+      return themeId;
+    }
+
+    var createResult = await client
+      .from("course_settings")
+      .upsert({
+        course_id: config.courseId,
+        theme_id: "dark_premium"
+      }, { onConflict: "course_id" })
+      .select("theme_id")
+      .maybeSingle();
+
+    if (createResult.error) {
+      console.warn("Не удалось создать course_settings со значением по умолчанию:", createResult.error);
+      return "dark_premium";
+    }
+
+    return normalizeThemeId(createResult.data && createResult.data.theme_id);
   }
 
   async function saveCourseThemeId(themeId) {
@@ -155,9 +174,11 @@
 
     var normalized = normalizeThemeId(themeId);
     var result = await client
-      .from("courses")
-      .update({ theme_id: normalized })
-      .eq("course_id", config.courseId)
+      .from("course_settings")
+      .upsert({
+        course_id: config.courseId,
+        theme_id: normalized
+      }, { onConflict: "course_id" })
       .select("theme_id")
       .maybeSingle();
 
@@ -166,7 +187,7 @@
       throw new Error("Не удалось сохранить тему курса");
     }
 
-    state.courseThemeId = normalizeThemeId(result.data && result.data.theme_id);
+    state.selectedThemeId = normalizeThemeId(result.data && result.data.theme_id);
     renderThemeCards();
   }
 
@@ -2155,12 +2176,17 @@
         if (!themeBtn) return;
 
         var themeId = themeBtn.getAttribute("data-theme-id");
-        if (!themeId || themeId === state.courseThemeId) return;
+        if (!themeId || themeId === state.selectedThemeId) return;
 
+        var previousThemeId = state.selectedThemeId;
+        state.selectedThemeId = normalizeThemeId(themeId);
+        renderThemeCards();
         void saveCourseThemeId(themeId).then(function () {
           alert("Тема WebApp сохранена");
         }).catch(function (error) {
           console.error(error);
+          state.selectedThemeId = previousThemeId;
+          renderThemeCards();
           alert(error && error.message ? error.message : "Не удалось сохранить тему");
         });
       });
@@ -2593,7 +2619,7 @@
 
     initTooltips();
     bindEvents();
-    state.courseThemeId = await fetchCourseThemeId();
+    state.selectedThemeId = await fetchCourseThemeId();
     renderThemeCards();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
