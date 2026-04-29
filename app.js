@@ -20,7 +20,8 @@
     light_clean: "theme-light-clean",
     fitness_power: "theme-fitness-power",
     soft_women: "theme-soft-women",
-    business_black: "theme-business-black"
+    business_black: "theme-business-black",
+    wow_glass: "theme-wow-glass"
   };
 
   function getConfig() {

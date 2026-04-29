@@ -81,6 +81,59 @@ body.theme-business-black {
   --border: rgba(212, 175, 55, 0.24);
 }
 
+
+body.theme-wow-glass {
+  --bg: #04111f;
+  --card: rgba(8, 20, 34, 0.72);
+  --card-2: rgba(10, 34, 56, 0.68);
+  --text: #eef7ff;
+  --muted: #9bb8d1;
+  --accent: #5ff2ff;
+  --accent-rgb: 95, 242, 255;
+  --border: rgba(255, 255, 255, 0.16);
+  --button-bg: linear-gradient(90deg, #5ff2ff, #87fbff);
+  --button-text: #03212a;
+  --button-border: rgba(255, 255, 255, 0.14);
+  --badge-bg: rgba(95, 242, 255, 0.22);
+  --badge-text: #e8f8ff;
+  --module-text: #b8d5ec;
+}
+
+body.theme-wow-glass {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(95,242,255,0.16), transparent 28%),
+    radial-gradient(circle at 80% 30%, rgba(255,184,77,0.14), transparent 24%),
+    linear-gradient(135deg, #04111f, #0a2238 60%, #06101a);
+  background-attachment: fixed;
+}
+
+body.theme-wow-glass .card,
+body.theme-wow-glass .lesson-card,
+body.theme-wow-glass .lesson-block,
+body.theme-wow-glass .video-link-card,
+body.theme-wow-glass .attachments,
+body.theme-wow-glass .state,
+body.theme-wow-glass .debug-panel {
+  background: rgba(8,20,34,0.68);
+  border: 1px solid rgba(255,255,255,0.14);
+  box-shadow: 0 18px 60px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+body.theme-wow-glass .btn,
+body.theme-wow-glass .btn-primary {
+  background: linear-gradient(90deg, #5ff2ff, #87fbff);
+  color: #03212a;
+  box-shadow: 0 10px 30px rgba(95,242,255,0.28);
+}
+
+body.theme-wow-glass .status.done,
+body.theme-wow-glass .status.locked {
+  background: rgba(95, 242, 255, 0.22);
+  color: #e8f8ff;
+}
+
 * { box-sizing: border-box; }
 
 html,
