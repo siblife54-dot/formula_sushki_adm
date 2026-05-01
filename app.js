@@ -33,6 +33,11 @@
     return params.get("course") || getConfig().courseId;
   }
 
+  function getIndexUrlWithCourse() {
+    var courseId = getActiveCourseId();
+    return "./index.html?course=" + encodeURIComponent(courseId);
+  }
+
   function normalizeThemeId(themeId) {
     var value = String(themeId || "").trim();
     if (WEBAPP_THEME_IDS[value]) return value;
@@ -750,8 +755,7 @@
       return;
     }
 
-    var courseId = getActiveCourseId();
-    var backHref = "./index.html?course=" + encodeURIComponent(courseId);
+    var backHref = getIndexUrlWithCourse();
     document.querySelectorAll('.top-back, .lesson-footer a.btn[href*="index.html"]').forEach(function (link) {
       link.setAttribute("href", backHref);
     });
@@ -907,7 +911,7 @@
       completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
       setTimeout(function () {
-        window.location.href = "./index.html";
+        window.location.href = getIndexUrlWithCourse();
       }, 250);
     });
   }
