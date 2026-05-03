@@ -357,6 +357,18 @@
     return (window.location.origin || "") + getBasePath() + "index.html?course=" + encodeURIComponent(courseId);
   }
 
+  function getCourseStatusLabel(status) {
+    var statusMap = {
+      active: "Активен",
+      trial: "Пробный период",
+      blocked: "Отключён",
+      disabled: "Отключён",
+      draft: "Черновик"
+    };
+    var key = String(status || "").toLowerCase();
+    return statusMap[key] || "Активен";
+  }
+
   async function fetchMyCourses() {
     var client = getClient();
     var result = await client
@@ -381,13 +393,14 @@
     }
     list.innerHTML = courses.map(function (course) {
       var primaryId = resolveCoursePrimaryId(course);
-            return [
+      return [
         '<article class="admin-course-card">',
+        '<div class="admin-course-card__head">',
         '<h3>' + escapeHtml(course.title || "Без названия") + '</h3>',
-        '<p class="admin-course-card__meta">ID курса: ' + escapeHtml(String(primaryId || "—")) + ' • status: ' + escapeHtml(String(course.status || "active")) + '</p>',
+        '<span class="admin-course-card__status">' + escapeHtml(getCourseStatusLabel(course.status)) + '</span>',
+        '</div>',
         '<div class="admin-course-card__actions">',
         '<a class="btn btn-primary" href="' + buildCourseAdminUrl(primaryId) + '">Открыть</a>',
-        '<button class="admin-btn-ghost js-copy-student-link" type="button" data-course-id="' + escapeAttr(String(primaryId)) + '">Скопировать ссылку ученика</button>',
         '</div>',
         '</article>'
       ].join("");
@@ -455,24 +468,6 @@
       });
     }
 
-    var list = document.getElementById("coursesList");
-    if (list) {
-      list.addEventListener("click", function (event) {
-        var button = event.target.closest(".js-copy-student-link");
-        if (!button) return;
-        var courseId = button.getAttribute("data-course-id");
-        if (!courseId) return;
-        var url = buildStudentCourseUrl(courseId);
-        navigator.clipboard.writeText(url).then(function () {
-          button.textContent = "Ссылка скопирована";
-          setTimeout(function () {
-            button.textContent = "Скопировать ссылку ученика";
-          }, 1200);
-        }).catch(function () {
-          window.prompt("Скопируйте ссылку:", url);
-        });
-      });
-    }
   }
 
   function normalizeThemeId(themeId) {
@@ -3061,7 +3056,7 @@
       return;
     }
     console.log("activeCourseId:", getActiveCourseId());
-    document.getElementById("adminCourseLabel").textContent = getActiveCourseId() || "Без course_id";
+    document.getElementById("adminCourseLabel").textContent = getActiveCourseId() || "Курс не выбран";
 
     initTooltips();
     bindEvents();
