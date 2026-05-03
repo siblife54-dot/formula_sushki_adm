@@ -334,7 +334,7 @@
     return Boolean(params.get("course"));
   }
 
-  function slugifyCourseName(value) {
+  function generateCourseId(value) {
     var normalized = String(value || "")
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
@@ -381,11 +381,10 @@
     }
     list.innerHTML = courses.map(function (course) {
       var primaryId = resolveCoursePrimaryId(course);
-      var slugOrId = course.slug || primaryId || "—";
-      return [
+            return [
         '<article class="admin-course-card">',
         '<h3>' + escapeHtml(course.title || "Без названия") + '</h3>',
-        '<p class="admin-course-card__meta">slug/id: ' + escapeHtml(String(slugOrId)) + ' • status: ' + escapeHtml(String(course.status || "active")) + '</p>',
+        '<p class="admin-course-card__meta">ID курса: ' + escapeHtml(String(primaryId || "—")) + ' • status: ' + escapeHtml(String(course.status || "active")) + '</p>',
         '<div class="admin-course-card__actions">',
         '<a class="btn btn-primary" href="' + buildCourseAdminUrl(primaryId) + '">Открыть</a>',
         '<button class="admin-btn-ghost js-copy-student-link" type="button" data-course-id="' + escapeAttr(String(primaryId)) + '">Скопировать ссылку ученика</button>',
@@ -399,16 +398,13 @@
     var client = getClient();
     var title = window.prompt("Название курса");
     if (!title || !title.trim()) return;
-    var slugInput = window.prompt("Slug (необязательно)") || "";
-    var slug = slugifyCourseName(slugInput.trim() || title.trim());
-    var courseId = slug;
+    var courseId = generateCourseId(title.trim());
     // TODO: enforce tariff course limits by account.tariff later
     var insertResult = await client
       .from("courses")
       .insert({
         account_id: DEMO_ACCOUNT_ID,
         course_id: courseId,
-        slug: slug,
         title: title.trim(),
         status: "active"
       })
