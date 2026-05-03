@@ -32,10 +32,25 @@ body[data-page="admin"] {
   padding: 14px;
 }
 
-.admin-course-card__meta {
-  color: var(--muted);
-  font-size: 13px;
-  margin-top: 6px;
+.admin-course-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-course-card__head h3 {
+  margin: 0;
+}
+
+.admin-course-card__status {
+  border: 1px solid color-mix(in srgb, var(--accent) 48%, transparent);
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--accent) 70%, #ffffff 30%);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .admin-course-card__actions {
@@ -172,6 +187,20 @@ body[data-page="admin"] {
 
 .admin-main {
   padding: 28px;
+}
+
+.admin-main-header {
+  margin-bottom: 10px;
+}
+
+.admin-back-link {
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+}
+
+.admin-back-link:hover {
+  color: var(--text);
 }
 
 .admin-builder {
