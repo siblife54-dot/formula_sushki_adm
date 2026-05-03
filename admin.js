@@ -418,8 +418,7 @@
       .from("course_settings")
       .upsert({
         course_id: actualCourseId,
-        theme_id: "dark_premium",
-        brand_name: title.trim()
+        theme_id: "dark_premium"
       }, { onConflict: "course_id" });
     if (settingsResult.error) throw settingsResult.error;
 
