@@ -520,111 +520,74 @@
     root.appendChild(section);
   }
 
-  function bindAuthGateSubmit() {
-    var submitBtn = document.getElementById("authEmailSubmitBtn");
-    var signInModeBtn = document.getElementById("authSignInModeBtn");
-    var signUpModeBtn = document.getElementById("authSignUpModeBtn");
-    var emailInput = document.getElementById("authEmailInput");
-    var passwordInput = document.getElementById("authPasswordInput");
-    var statusText = document.getElementById("authEmailStatusText");
-    var authMode = "sign_in";
-    if (!submitBtn || !emailInput || !passwordInput) return;
+  var LOCAL_ACCOUNT_ID_KEY = "mindcore_account_id";
 
-    function setStatus(message) {
-      if (!statusText) return;
-      statusText.hidden = !message;
-      statusText.textContent = message || "";
+  function getStoredLocalAccountId() {
+    try {
+      return window.localStorage.getItem(LOCAL_ACCOUNT_ID_KEY);
+    } catch (error) {
+      return null;
     }
-
-    function updateAuthMode(mode) {
-      authMode = mode === "sign_up" ? "sign_up" : "sign_in";
-      submitBtn.textContent = authMode === "sign_up" ? "Создать аккаунт" : "Войти";
-      if (signInModeBtn) signInModeBtn.className = authMode === "sign_in" ? "btn btn-primary" : "admin-btn-ghost";
-      if (signUpModeBtn) signUpModeBtn.className = authMode === "sign_up" ? "btn btn-primary" : "admin-btn-ghost";
-      setStatus("");
-    }
-
-    if (signInModeBtn) signInModeBtn.addEventListener("click", function () { updateAuthMode("sign_in"); });
-    if (signUpModeBtn) signUpModeBtn.addEventListener("click", function () { updateAuthMode("sign_up"); });
-    updateAuthMode("sign_in");
-
-    submitBtn.addEventListener("click", async function () {
-      var client = getClient();
-      var email = String(emailInput.value || "").trim();
-      var password = String(passwordInput.value || "");
-      if (!email || !password) {
-        setStatus("Введите email и пароль");
-        return;
-      }
-      submitBtn.disabled = true;
-      setStatus("");
-      try {
-        if (authMode === "sign_up" && password.length < 6) {
-          throw new Error("Пароль слишком короткий. Минимум 6 символов.");
-        }
-        var result = authMode === "sign_up"
-          ? await client.auth.signUp({ email: email, password: password })
-          : await client.auth.signInWithPassword({ email: email, password: password });
-        if (result.error) throw result.error;
-
-        var user = result && result.data && result.data.user;
-        var session = result && result.data && result.data.session;
-        if (user && session) {
-          await ensureCurrentAccount(user);
-          window.location.href = "admin.html";
-          return;
-        }
-
-        if (authMode === "sign_up") {
-          setStatus("Аккаунт создан. Если включено подтверждение email, проверьте почту. Если вход не выполнен автоматически — войдите с этим email и паролем.");
-          return;
-        }
-        throw new Error("Не удалось выполнить вход. Проверьте email и пароль.");
-      } catch (error) {
-        var rawMessage = String((error && error.message) || "");
-        var message = rawMessage || "Ошибка входа";
-        var normalized = rawMessage.toLowerCase();
-        if (normalized.indexOf("invalid login credentials") !== -1 || normalized.indexOf("invalid credentials") !== -1) {
-          message = "Неправильный email или пароль";
-        } else if (normalized.indexOf("password should be at least") !== -1 || normalized.indexOf("password is too short") !== -1) {
-          message = "Пароль слишком короткий. Минимум 6 символов.";
-        } else if (normalized.indexOf("user already registered") !== -1 || normalized.indexOf("already registered") !== -1 || normalized.indexOf("already exists") !== -1) {
-          message = "Пользователь с таким email уже существует";
-        }
-        setStatus(message);
-      } finally {
-        submitBtn.disabled = false;
-      }
-    });
   }
 
-  async function ensureCurrentAccount(user) {
-    var client = getClient();
-    var existing = await client.from("accounts").select("*").eq("auth_user_id", user.id).limit(1).maybeSingle();
-    if (existing.error) throw existing.error;
-    if (existing.data) return existing.data;
+  function storeLocalAccountId(accountId) {
+    try {
+      window.localStorage.setItem(LOCAL_ACCOUNT_ID_KEY, String(accountId));
+    } catch (error) {}
+  }
 
-    var payload = { auth_user_id: user.id, email: user.email };
-    var withTariff = Object.assign({}, payload, { tariff: "trial", subscription_status: "trial" });
-    var created = await client.from("accounts").insert(withTariff).select("*").single();
-    if (created.error) {
-      var msg = String(created.error.message || "").toLowerCase();
-      var withSubscription = Object.assign({}, payload, { subscription_status: "trial" });
-      if (msg.includes("tariff")) {
-        created = await client.from("accounts").insert(withSubscription).select("*").single();
-      }
-      if (created.error) {
-        var msg2 = String(created.error.message || "").toLowerCase();
-        if (msg2.includes("subscription_status")) {
-          created = await client.from("accounts").insert(payload).select("*").single();
-        }
+  function clearLocalAccountId() {
+    try {
+      window.localStorage.removeItem(LOCAL_ACCOUNT_ID_KEY);
+    } catch (error) {}
+  }
+
+  async function createLocalAccount() {
+    var client = getClient();
+    var payload = {
+      email: null,
+      full_name: "Эксперт",
+      company_name: "Новый кабинет",
+      tariff: "trial",
+      subscription_status: "trial"
+    };
+    var keys = ["email", "full_name", "company_name", "tariff", "subscription_status"];
+
+    for (var i = keys.length; i > 0; i -= 1) {
+      var insertPayload = {};
+      keys.slice(0, i).forEach(function (key) {
+        insertPayload[key] = payload[key];
+      });
+      var created = await client.from("accounts").insert(insertPayload).select("id").single();
+      if (!created.error && created.data) {
+        return created.data;
       }
     }
-    if (created.error) throw created.error;
-    return created.data;
+
+    var fallback = await client.from("accounts").insert({}).select("id").single();
+    if (fallback.error) throw fallback.error;
+    return fallback.data;
+  }
+
+  async function getOrCreateLocalAccount() {
+    var client = getClient();
+    var storedId = getStoredLocalAccountId();
+    if (storedId) {
+      var existing = await client.from("accounts").select("id").eq("id", storedId).maybeSingle();
+      if (existing.error) throw existing.error;
+      if (existing.data && existing.data.id) {
+        return existing.data;
+      }
+      clearLocalAccountId();
+    }
+
+    var created = await createLocalAccount();
+    storeLocalAccountId(created.id);
+    return created;
   }
 
   async function verifyCourseAccess() {
+
     if (!hasCourseInUrl()) return;
     var client = getClient();
     var courseId = getActiveCourseId();
@@ -3221,15 +3184,14 @@
     return escapeHtml(value).replace(/`/g, "&#096;");
   }
 
-  function bindLogout() {
-    var logoutBtn = document.getElementById("logoutBtn");
-    var client = getClient();
-    if (logoutBtn) {
-      logoutBtn.addEventListener("click", async function () {
-        await client.auth.signOut();
-        window.location.href = "admin.html";
-      });
-    }
+  function bindResetCabinet() {
+    var resetBtn = document.getElementById("logoutBtn");
+    if (!resetBtn) return;
+    resetBtn.textContent = "Сбросить кабинет";
+    resetBtn.addEventListener("click", function () {
+      clearLocalAccountId();
+      window.location.href = "admin.html";
+    });
   }
 
   async function initCourseEditor() {
@@ -3264,37 +3226,10 @@
   async function init() {
     hideAllAdminScreens();
     try {
-      bindAuthGateSubmit();
-      var client = getClient();
-      var sessionResult = await client.auth.getSession();
-      var sessionError = sessionResult && sessionResult.error;
-      if (sessionError) throw sessionError;
-      var session = sessionResult && sessionResult.data && sessionResult.data.session;
-      if (!session) {
-        showAuthGate();
-        return;
-      }
-
-      var userResult = await client.auth.getUser();
-      var userError = userResult && userResult.error;
-      if (userError) {
-        var userErrorMessage = String((userError && userError.message) || "").toLowerCase();
-        if (userErrorMessage.indexOf("auth session missing") !== -1 || userErrorMessage.indexOf("session missing") !== -1 || userErrorMessage.indexOf("missing session") !== -1) {
-          showAuthGate();
-          return;
-        }
-        throw userError;
-      }
-      var user = userResult && userResult.data && userResult.data.user;
-      if (!user) {
-        showAuthGate();
-        return;
-      }
-
-      var account = await ensureCurrentAccount(user);
+      var account = await getOrCreateLocalAccount();
       currentAccountId = account.id;
 
-      bindLogout();
+      bindResetCabinet();
 
       if (!hasCourseInUrl()) {
         await initCoursesDashboard();
