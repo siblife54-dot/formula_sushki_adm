@@ -522,32 +522,76 @@
 
   function bindAuthGateSubmit() {
     var submitBtn = document.getElementById("authEmailSubmitBtn");
+    var signInModeBtn = document.getElementById("authSignInModeBtn");
+    var signUpModeBtn = document.getElementById("authSignUpModeBtn");
     var emailInput = document.getElementById("authEmailInput");
+    var passwordInput = document.getElementById("authPasswordInput");
     var statusText = document.getElementById("authEmailStatusText");
-    if (!submitBtn || !emailInput) return;
+    var authMode = "sign_in";
+    if (!submitBtn || !emailInput || !passwordInput) return;
+
+    function setStatus(message) {
+      if (!statusText) return;
+      statusText.hidden = !message;
+      statusText.textContent = message || "";
+    }
+
+    function updateAuthMode(mode) {
+      authMode = mode === "sign_up" ? "sign_up" : "sign_in";
+      submitBtn.textContent = authMode === "sign_up" ? "Создать аккаунт" : "Войти";
+      if (signInModeBtn) signInModeBtn.className = authMode === "sign_in" ? "btn btn-primary" : "admin-btn-ghost";
+      if (signUpModeBtn) signUpModeBtn.className = authMode === "sign_up" ? "btn btn-primary" : "admin-btn-ghost";
+      setStatus("");
+    }
+
+    if (signInModeBtn) signInModeBtn.addEventListener("click", function () { updateAuthMode("sign_in"); });
+    if (signUpModeBtn) signUpModeBtn.addEventListener("click", function () { updateAuthMode("sign_up"); });
+    updateAuthMode("sign_in");
+
     submitBtn.addEventListener("click", async function () {
       var client = getClient();
       var email = String(emailInput.value || "").trim();
-      if (!email) return;
+      var password = String(passwordInput.value || "");
+      if (!email || !password) {
+        setStatus("Введите email и пароль");
+        return;
+      }
       submitBtn.disabled = true;
-      if (statusText) statusText.hidden = true;
+      setStatus("");
       try {
-        var result = await client.auth.signInWithOtp({
-          email: email,
-          options: {
-            emailRedirectTo: window.location.origin + window.location.pathname,
-          },
-        });
+        if (authMode === "sign_up" && password.length < 6) {
+          throw new Error("Пароль слишком короткий. Минимум 6 символов.");
+        }
+        var result = authMode === "sign_up"
+          ? await client.auth.signUp({ email: email, password: password })
+          : await client.auth.signInWithPassword({ email: email, password: password });
         if (result.error) throw result.error;
-        if (statusText) {
-          statusText.hidden = false;
-          statusText.textContent = "Проверьте почту, мы отправили ссылку для входа";
+
+        var user = result && result.data && result.data.user;
+        var session = result && result.data && result.data.session;
+        if (user && session) {
+          await ensureCurrentAccount(user);
+          window.location.href = "admin.html";
+          return;
         }
+
+        if (authMode === "sign_up") {
+          setStatus("Аккаунт создан. Если включено подтверждение email, проверьте почту. Если вход не выполнен автоматически — войдите с этим email и паролем.");
+          return;
+        }
+        throw new Error("Не удалось выполнить вход. Проверьте email и пароль.");
       } catch (error) {
-        if (statusText) {
-          statusText.hidden = false;
-          statusText.textContent = error.message || "Ошибка входа";
+        var rawMessage = String((error && error.message) || "");
+        var message = rawMessage || "Ошибка входа";
+        var normalized = rawMessage.toLowerCase();
+        if (normalized.indexOf("invalid login credentials") !== -1 || normalized.indexOf("invalid credentials") !== -1) {
+          message = "Неправильный email или пароль";
+        } else if (normalized.indexOf("password should be at least") !== -1 || normalized.indexOf("password is too short") !== -1) {
+          message = "Пароль слишком короткий. Минимум 6 символов.";
+        } else if (normalized.indexOf("user already registered") !== -1 || normalized.indexOf("already registered") !== -1 || normalized.indexOf("already exists") !== -1) {
+          message = "Пользователь с таким email уже существует";
         }
+        setStatus(message);
       } finally {
         submitBtn.disabled = false;
       }

@@ -12,9 +12,17 @@
   <section id="adminAuthGate" class="admin-courses-dashboard" hidden>
     <div class="admin-courses-dashboard__inner">
       <h1>Вход в кабинет</h1>
+      <div class="admin-auth-mode">
+        <button id="authSignInModeBtn" class="btn btn-primary" type="button">Войти</button>
+        <button id="authSignUpModeBtn" class="admin-btn-ghost" type="button">Зарегистрироваться</button>
+      </div>
       <label>
         Email
         <input id="authEmailInput" type="email" placeholder="you@example.com" />
+      </label>
+      <label>
+        Пароль
+        <input id="authPasswordInput" type="password" placeholder="Минимум 6 символов" />
       </label>
       <button id="authEmailSubmitBtn" class="btn btn-primary" type="button">Войти</button>
       <p id="authEmailStatusText" class="admin-hint" hidden></p>
