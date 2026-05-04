@@ -521,6 +521,7 @@
   }
 
   var LOCAL_ACCOUNT_ID_KEY = "mindcore_account_id";
+  var LOCAL_ACCOUNT_LOGIN_KEY = "mindcore_account_login";
 
   function getStoredLocalAccountId() {
     try {
@@ -542,48 +543,76 @@
     } catch (error) {}
   }
 
-  async function createLocalAccount() {
-    var client = getClient();
-    var payload = {
-      email: null,
-      full_name: "Эксперт",
-      company_name: "Новый кабинет",
-      tariff: "trial",
-      subscription_status: "trial"
-    };
-    var keys = ["email", "full_name", "company_name", "tariff", "subscription_status"];
-
-    for (var i = keys.length; i > 0; i -= 1) {
-      var insertPayload = {};
-      keys.slice(0, i).forEach(function (key) {
-        insertPayload[key] = payload[key];
-      });
-      var created = await client.from("accounts").insert(insertPayload).select("id").single();
-      if (!created.error && created.data) {
-        return created.data;
-      }
-    }
-
-    var fallback = await client.from("accounts").insert({}).select("id").single();
-    if (fallback.error) throw fallback.error;
-    return fallback.data;
+  function storeLocalAccountLogin(login) {
+    try {
+      window.localStorage.setItem(LOCAL_ACCOUNT_LOGIN_KEY, String(login || ""));
+    } catch (error) {}
   }
 
-  async function getOrCreateLocalAccount() {
+  function clearStoredAuth() {
+    clearLocalAccountId();
+    try {
+      window.localStorage.removeItem(LOCAL_ACCOUNT_LOGIN_KEY);
+    } catch (error) {}
+  }
+
+  async function getStoredAccount() {
     var client = getClient();
     var storedId = getStoredLocalAccountId();
-    if (storedId) {
-      var existing = await client.from("accounts").select("id").eq("id", storedId).maybeSingle();
-      if (existing.error) throw existing.error;
-      if (existing.data && existing.data.id) {
-        return existing.data;
+    if (!storedId) return null;
+    var existing = await client.from("accounts").select("id,login").eq("id", storedId).maybeSingle();
+    if (existing.error) throw existing.error;
+    if (existing.data && existing.data.id) return existing.data;
+    clearStoredAuth();
+    return null;
+  }
+
+  function setAuthStatus(message, isError) {
+    var statusNode = document.getElementById("authLoginStatusText");
+    if (!statusNode) return;
+    statusNode.textContent = message || "";
+    statusNode.hidden = !message;
+    statusNode.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function bindLoginForm() {
+    var submitBtn = document.getElementById("authLoginSubmitBtn");
+    var loginInput = document.getElementById("authLoginInput");
+    var passwordInput = document.getElementById("authPasswordInput");
+    if (!submitBtn || !loginInput || !passwordInput) return;
+
+    async function handleLogin() {
+      var login = String(loginInput.value || "").trim();
+      var password = String(passwordInput.value || "");
+      if (!login || !password) {
+        setAuthStatus("Введите логин и пароль", true);
+        return;
       }
-      clearLocalAccountId();
+      submitBtn.disabled = true;
+      setAuthStatus("", false);
+      try {
+        var client = getClient();
+        var result = await client.from("accounts").select("*").eq("login", login).limit(1).maybeSingle();
+        if (result.error) throw result.error;
+        var account = result.data;
+        if (!account || String(account.password || "") !== password) {
+          setAuthStatus("Неверный логин или пароль", true);
+          return;
+        }
+        storeLocalAccountId(account.id);
+        storeLocalAccountLogin(account.login || login);
+        window.location.href = "admin.html" + window.location.search;
+      } catch (error) {
+        setAuthStatus((error && error.message) || "Ошибка входа", true);
+      } finally {
+        submitBtn.disabled = false;
+      }
     }
 
-    var created = await createLocalAccount();
-    storeLocalAccountId(created.id);
-    return created;
+    submitBtn.addEventListener("click", handleLogin);
+    passwordInput.addEventListener("keydown", function (event) {
+      if (event.key === "Enter") handleLogin();
+    });
   }
 
   async function verifyCourseAccess() {
@@ -3188,19 +3217,12 @@
     return new URLSearchParams(window.location.search).get("debug") === "1";
   }
 
-  function bindResetCabinet() {
-    var resetBtn = document.getElementById("logoutBtn");
-    if (!resetBtn) return;
-
-    if (!isDebugMode()) {
-      resetBtn.hidden = true;
-      return;
-    }
-
-    resetBtn.textContent = "Сбросить кабинет";
-    resetBtn.hidden = false;
-    resetBtn.addEventListener("click", function () {
-      clearLocalAccountId();
+  function bindLogout() {
+    var logoutBtn = document.getElementById("logoutBtn");
+    if (!logoutBtn) return;
+    logoutBtn.hidden = false;
+    logoutBtn.addEventListener("click", function () {
+      clearStoredAuth();
       window.location.href = "admin.html";
     });
   }
@@ -3245,10 +3267,14 @@
   async function init() {
     hideAllAdminScreens();
     try {
-      var account = await getOrCreateLocalAccount();
+      var account = await getStoredAccount();
+      if (!account) {
+        showAuthGate();
+        bindLoginForm();
+        return;
+      }
       currentAccountId = account.id;
-
-      bindResetCabinet();
+      bindLogout();
 
       if (!hasCourseInUrl()) {
         await initCoursesDashboard();
