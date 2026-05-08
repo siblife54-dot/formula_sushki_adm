@@ -89,6 +89,8 @@
     if (brand) brand.textContent = config.brandName || "Кабинет курса";
   }
 
+  var previewThemeOverride = null;
+
   function applyThemeToWebApp(theme) {
     if (!theme) return;
     var themeId = normalizeThemeId(theme.id || theme.theme_id || theme.slug);
@@ -1063,7 +1065,9 @@ document.addEventListener("click", function (e) {
         console.error(error);
       }
 
-      themeId = getPreviewThemeId() || themeId;
+      themeId = (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug))
+        ? normalizeThemeId(previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)
+        : (getPreviewThemeId() || themeId);
       applyTheme(config, themeId);
 
       var lessons = await fetchLessons(config);
@@ -1108,12 +1112,16 @@ document.addEventListener("click", function (e) {
     if (event.data.type === "mindcore:apply-preview-theme") {
       var theme = event.data.theme;
       console.log("[preview] received theme", theme);
-      applyThemeToWebApp(theme);
+      previewThemeOverride = theme || null;
+      applyThemeToWebApp(previewThemeOverride);
       return;
     }
 
     if (event.data.type === "mindcore:refresh-preview-data") {
       await refreshPreviewDataWithoutReload();
+      if (previewThemeOverride) {
+        applyThemeToWebApp(previewThemeOverride);
+      }
     }
   });
 
