@@ -84,13 +84,17 @@
     if (!iframe) return;
     try {
       if (iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: "mindcore:refresh-preview" }, "*");
+        iframe.contentWindow.postMessage({ type: "mindcore:refresh-preview-data" }, window.location.origin);
       }
     } catch (error) {}
 
     window.clearTimeout(refreshPreview._fallbackTimer);
     refreshPreview._fallbackTimer = window.setTimeout(function () {
-      iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId) + "&t=" + Date.now());
+      if (iframe.contentWindow && iframe.contentWindow.location) {
+        iframe.contentWindow.location.reload();
+      } else {
+        iframe.setAttribute("src", iframe.getAttribute("src") || getPreviewUrl(state.selectedThemeId));
+      }
     }, 500);
   }
 function getDefaultAdminTab() {
