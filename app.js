@@ -1161,32 +1161,33 @@ document.addEventListener("click", function (e) {
 
   window.addEventListener("message", async function (event) {
     if (!isPreviewMode()) return;
-    if (!event || !event.data) return;
     if (event.origin !== window.location.origin) return;
+    var data = event && event.data;
+    if (!data || !data.type) return;
 
-    if (event.data.type === "mindcore:apply-preview-theme") {
-      var theme = event.data.theme;
+    if (data.type === "mindcore:apply-preview-theme") {
+      var theme = data.theme;
       console.log("[preview] received theme", theme);
       previewThemeOverride = theme || null;
       applyThemeToWebApp(previewThemeOverride);
       return;
     }
 
-    if (event.data.type === "mindcore:refresh-preview-data") {
+    if (data.type === "mindcore:refresh-preview-data") {
       await refreshPreviewDataWithoutReload();
-      if (event.data.preservePreviewTheme && previewThemeOverride) {
+      if (previewThemeOverride) {
         applyThemeToWebApp(previewThemeOverride);
       }
       return;
     }
 
-    if (event.data.type === "mindcore:navigate-preview") {
-      if (event.data.target === "lesson" && event.data.lessonId) {
-        navigatePreviewToLesson(event.data.lessonId);
+    if (data.type === "mindcore:navigate-preview") {
+      if (data.target === "lesson" && data.lessonId) {
+        navigatePreviewToLesson(data.lessonId);
         return;
       }
 
-      if (event.data.target === "home") {
+      if (data.target === "home") {
         navigatePreviewToHome();
       }
     }

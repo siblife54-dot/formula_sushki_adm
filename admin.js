@@ -55,6 +55,8 @@
     { id: "wow_glass", name: "Wow Glass", description: "Премиальный glass-стиль с живым свечением" }
   ];
   var ACTIVATION_BOT_URL = "https://t.me/mindcore_miniapp_bot?start=activate";
+  var currentPreviewTheme = null;
+  var isPreviewIframeLoadBound = false;
 
 
 
@@ -73,53 +75,56 @@
     return url.toString();
   }
 
-  function initPreviewIframe() {
-    var iframe = document.getElementById("previewIframe");
-    if (!iframe) return;
-    iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
+  function getPreviewIframe() {
+    return document.querySelector("#live-preview-iframe")
+      || document.querySelector("[data-live-preview-iframe]")
+      || document.querySelector("#previewIframe");
   }
 
-  function refreshPreview(options) {
-    var opts = options || {};
-    var iframe = document.getElementById("previewIframe");
-    if (!iframe) return;
-    try {
-      if (iframe.contentWindow) {
-        iframe.contentWindow.postMessage({
-          type: "mindcore:refresh-preview-data",
-          preservePreviewTheme: !!opts.preservePreviewTheme
-        }, window.location.origin);
-      }
-    } catch (error) {}
-
-    if (opts.skipFallbackReload) {
+  function sendPreviewMessage(message) {
+    var iframe = getPreviewIframe();
+    if (!iframe || !iframe.contentWindow) {
+      console.warn("[preview] iframe not ready", message);
       return;
     }
-
-    window.clearTimeout(refreshPreview._fallbackTimer);
-    refreshPreview._fallbackTimer = window.setTimeout(function () {
-      if (iframe.contentWindow && iframe.contentWindow.location) {
-        iframe.contentWindow.location.reload();
-      } else {
-        iframe.setAttribute("src", iframe.getAttribute("src") || getPreviewUrl(state.selectedThemeId));
-      }
-    }, 500);
+    iframe.contentWindow.postMessage(message, window.location.origin);
   }
 
-  function navigatePreviewToLesson(lesson) {
-    var iframe = document.getElementById("previewIframe");
-    if (!iframe || !iframe.contentWindow || !lesson) return;
+  function applyThemeToPreview(theme) {
+    if (!theme) return;
+    sendPreviewMessage({
+      type: "mindcore:apply-preview-theme",
+      theme: theme
+    });
+  }
 
-    var lessonId = lesson.lesson_id || lesson.id;
+  function refreshPreviewData() {
+    sendPreviewMessage({
+      type: "mindcore:refresh-preview-data"
+    });
+  }
+
+  function navigatePreviewToLesson(lessonId) {
     if (!lessonId) return;
+    sendPreviewMessage({
+      type: "mindcore:navigate-preview",
+      target: "lesson",
+      lessonId: String(lessonId)
+    });
+  }
 
-    try {
-      iframe.contentWindow.postMessage({
-        type: "mindcore:navigate-preview",
-        target: "lesson",
-        lessonId: String(lessonId)
-      }, window.location.origin);
-    } catch (error) {}
+  function initPreviewIframe() {
+    var iframe = getPreviewIframe();
+    if (!iframe) return;
+    iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
+    if (!isPreviewIframeLoadBound) {
+      iframe.addEventListener("load", function () {
+        if (currentPreviewTheme) {
+          applyThemeToPreview(currentPreviewTheme);
+        }
+      });
+      isPreviewIframeLoadBound = true;
+    }
   }
 function getDefaultAdminTab() {
     try {
@@ -762,16 +767,10 @@ function getDefaultAdminTab() {
   }
 
   function applyThemeToLivePreview(theme) {
-    var iframe = document.getElementById("previewIframe");
-    if (!iframe || !iframe.contentWindow || !theme) return;
-
-    try {
-      console.log("[preview] sending theme", theme);
-      iframe.contentWindow.postMessage({
-        type: "mindcore:apply-preview-theme",
-        theme: theme
-      }, window.location.origin);
-    } catch (error) {}
+    currentPreviewTheme = theme || null;
+    if (!theme) return;
+    console.log("[preview] sending theme", theme);
+    applyThemeToPreview(theme);
   }
 
   function renderThemeCards() {
@@ -872,7 +871,7 @@ function getDefaultAdminTab() {
     renderThemeCards();
     renderThemeDirtyState();
     applyThemeToLivePreview(selectedTheme);
-    refreshPreview({ preservePreviewTheme: true, skipFallbackReload: true });
+    refreshPreviewData();
   }
 
   async function fetchLessons() {
@@ -1222,7 +1221,7 @@ function getDefaultAdminTab() {
     state.quills = {};
 
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
   }
 
   function renderLessonsList() {
@@ -1337,7 +1336,7 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderEditor();
-    refreshPreview();
+    refreshPreviewData();
     return true;
   }
 
@@ -1364,7 +1363,7 @@ function getDefaultAdminTab() {
 
     renderLessonPreviewUploader();
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
   }
 
   function renderLessonPreviewUploader() {
@@ -1777,7 +1776,7 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderLessonPreviewUploader();
-    refreshPreview();
+    refreshPreviewData();
   }
 
   function initQuillForActiveSection(blockId) {
@@ -1824,7 +1823,7 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderEditor();
-    navigatePreviewToLesson(lesson);
+    navigatePreviewToLesson(lesson.lesson_id || lesson.id);
   }
 
   async function duplicateLesson(lessonDbId) {
@@ -2108,7 +2107,7 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderEditor();
-    refreshPreview();
+    refreshPreviewData();
     alert("Урок сохранён");
   }
 
@@ -2373,7 +2372,7 @@ function getDefaultAdminTab() {
     } else {
       refreshBlockIndicesInDom();
     }
-    refreshPreview();
+    refreshPreviewData();
   }
 
   async function deleteBlock(blockId) {
@@ -2480,7 +2479,7 @@ function getDefaultAdminTab() {
     });
 
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
     alert("Текст секции сохранён");
   }
 
@@ -2509,7 +2508,7 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
     return result.data;
   }
 
@@ -2539,7 +2538,7 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
   }
 
   async function createImageItem(blockId, imageUrl, imageAlt) {
@@ -2568,7 +2567,7 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
     return result.data;
   }
 
@@ -2612,7 +2611,7 @@ function getDefaultAdminTab() {
     }
 
     renderBlocksList();
-    refreshPreview();
+    refreshPreviewData();
   }
 
   async function handleLessonPreviewUpload(event) {
@@ -2630,7 +2629,7 @@ function getDefaultAdminTab() {
 
       renderLessonsList();
       renderLessonPreviewUploader();
-        refreshPreview();
+        refreshPreviewData();
       alert("Превью урока загружено");
     } catch (error) {
       console.error(error);
@@ -3281,9 +3280,11 @@ function getDefaultAdminTab() {
     await loadTelegramIntegration();
     state.selectedThemeId = await fetchCourseThemeId();
     state.savedThemeId = state.selectedThemeId;
+    currentPreviewTheme = getThemePresetById(state.selectedThemeId);
     renderThemeCards();
     renderThemeDirtyState();
-    refreshPreview();
+    applyThemeToPreview(currentPreviewTheme);
+    refreshPreviewData();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
       if (typeof lesson.preview_image_url === "undefined") {
@@ -3292,7 +3293,7 @@ function getDefaultAdminTab() {
       return lesson;
     });
     renderLessonsList();
-    refreshPreview();
+    refreshPreviewData();
 
     if (state.lessons.length) {
       await selectLessonById(state.lessons[0].id);
