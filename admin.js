@@ -103,7 +103,7 @@
   }
 
   function getTelegramWebAppUrl() {
-    return window.location.origin + window.location.pathname + "?course=" + encodeURIComponent(getActiveCourseId());
+    return getCurrentWebAppUrl() + "index.html?course=" + encodeURIComponent(getActiveCourseId());
   }
 
   function setTelegramStatus(message, isError) {
@@ -162,7 +162,7 @@
     if (!data || !data.telegram_connected) return;
 
     var webAppInput = document.getElementById("telegramWebAppUrl");
-    if (webAppInput && data.telegram_webapp_url) webAppInput.value = data.telegram_webapp_url;
+    if (webAppInput) webAppInput.value = getTelegramWebAppUrl();
 
     var buttonTitleInput = document.getElementById("telegramButtonTitle");
     if (buttonTitleInput && data.telegram_button_title) buttonTitleInput.value = data.telegram_button_title;
@@ -218,7 +218,8 @@
 
     var botToken = String((tokenInput && tokenInput.value) || "").trim();
     var buttonTitle = String((titleInput && titleInput.value) || "").trim() || "Открыть курс";
-    var webappUrl = String((urlInput && urlInput.value) || "").trim() || getTelegramWebAppUrl();
+    var webappUrl = getTelegramWebAppUrl();
+    if (urlInput) urlInput.value = webappUrl;
 
     if (!botToken) {
       setTelegramStatus("Введите Bot Token", true);
