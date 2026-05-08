@@ -23,6 +23,9 @@
     business_black: "theme-business-black",
     wow_glass: "theme-wow-glass"
   };
+  var WEBAPP_THEMES = Array.isArray(window.APP_THEME_PRESETS) && window.APP_THEME_PRESETS.length
+    ? window.APP_THEME_PRESETS.slice()
+    : Object.keys(WEBAPP_THEME_IDS).map(function (themeId) { return { id: themeId }; });
 
   function getConfig() {
     return window.APP_CONFIG || {};
@@ -73,7 +76,8 @@
 
   function normalizeThemeId(themeId) {
     var value = String(themeId || "").trim();
-    if (WEBAPP_THEME_IDS[value]) return value;
+    var existsInPresets = WEBAPP_THEMES.some(function (theme) { return theme && theme.id === value; });
+    if (existsInPresets && WEBAPP_THEME_IDS[value]) return value;
     return "dark_premium";
   }
 
