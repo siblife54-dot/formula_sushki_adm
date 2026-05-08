@@ -89,6 +89,13 @@
     if (brand) brand.textContent = config.brandName || "Кабинет курса";
   }
 
+  function applyThemeToWebApp(theme) {
+    if (!theme) return;
+    var themeId = normalizeThemeId(theme.id || theme.theme_id || theme.slug);
+    applyTheme(getConfig(), themeId);
+    document.body.setAttribute("data-preview-theme", themeId);
+  }
+
   async function fetchCourseThemeId(config) {
     var client = window.getSupabaseClient();
     if (!client) {
@@ -1044,9 +1051,12 @@ document.addEventListener("click", function (e) {
   window.addEventListener("message", async function (event) {
     if (!isPreviewMode()) return;
     if (!event || !event.data) return;
+    if (event.origin !== window.location.origin) return;
 
-    if (event.data.type === "mindcore:preview-theme") {
-      applyTheme(getConfig(), event.data.theme);
+    if (event.data.type === "mindcore:apply-preview-theme") {
+      var theme = event.data.theme;
+      console.log("[preview] received theme", theme);
+      applyThemeToWebApp(theme);
       return;
     }
 
