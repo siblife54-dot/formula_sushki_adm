@@ -1119,7 +1119,7 @@ document.addEventListener("click", function (e) {
 
     if (event.data.type === "mindcore:refresh-preview-data") {
       await refreshPreviewDataWithoutReload();
-      if (previewThemeOverride) {
+      if (event.data.preservePreviewTheme && previewThemeOverride) {
         applyThemeToWebApp(previewThemeOverride);
       }
     }
