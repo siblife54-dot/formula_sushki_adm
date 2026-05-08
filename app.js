@@ -43,12 +43,29 @@
 
   function getPreviewThemeId() {
     var params = new URLSearchParams(window.location.search);
-    return normalizeThemeId(params.get("preview_theme"));
+    var raw = String(params.get("preview_theme") || "").trim();
+    if (!raw) return null;
+    return normalizeThemeId(raw);
+  }
+
+  function appendPreviewParams(url) {
+    var currentParams = new URLSearchParams(window.location.search);
+    var isPreview = currentParams.get("preview") === "1";
+    var previewTheme = currentParams.get("preview_theme");
+
+    if (!isPreview) return url;
+
+    var nextUrl = new URL(url, window.location.href);
+    nextUrl.searchParams.set("preview", "1");
+    if (previewTheme) {
+      nextUrl.searchParams.set("preview_theme", normalizeThemeId(previewTheme));
+    }
+    return nextUrl.pathname.split("/").pop() + "?" + nextUrl.searchParams.toString();
   }
 
   function getIndexUrlWithCourse() {
     var courseId = getActiveCourseId();
-    return "./index.html?course=" + encodeURIComponent(courseId);
+    return appendPreviewParams("./index.html?course=" + encodeURIComponent(courseId));
   }
 
   function wireLessonBackLinks() {
@@ -494,7 +511,7 @@
       return /питан/i.test(lesson.title || "");
     });
     if (!nutritionLesson) return null;
-    return "./lesson.html?id=" + encodeURIComponent(nutritionLesson.lesson_id) + "&course=" + encodeURIComponent(getActiveCourseId());
+    return appendPreviewParams("./lesson.html?id=" + encodeURIComponent(nutritionLesson.lesson_id) + "&course=" + encodeURIComponent(getActiveCourseId()));
   }
 
   async function renderNutritionCard() {
@@ -583,7 +600,7 @@
         '<div class="lesson-actions">',
         (locked
           ? '<button class="btn btn-open" type="button" disabled>Открыть</button>'
-          : '<a class="btn btn-open" href="./lesson.html?id=' + encodeURIComponent(lesson.lesson_id) + '&course=' + encodeURIComponent(getActiveCourseId()) + '">Открыть</a>'),
+          : '<a class="btn btn-open" href="' + escapeAttr(appendPreviewParams("./lesson.html?id=" + encodeURIComponent(lesson.lesson_id) + "&course=" + encodeURIComponent(getActiveCourseId()))) + '">Открыть</a>'),
         '</div>',
         '</div>',
         '</article>'
@@ -1000,7 +1017,8 @@
       console.error(error);
     }
     if (isPreviewMode()) {
-      themeId = getPreviewThemeId() || themeId;
+      var previewThemeId = getPreviewThemeId();
+      if (previewThemeId) themeId = previewThemeId;
     }
     applyTheme(config, themeId);
     initTelegramViewport();
@@ -1121,34 +1139,26 @@ document.addEventListener("click", function (e) {
       return;
     }
 
-    var targetUrl = new URL("lesson.html", window.location.href);
+    var targetUrl = new URL(appendPreviewParams("lesson.html"), window.location.href);
     targetUrl.searchParams.set("id", nextId);
-    targetUrl.searchParams.set("preview", "1");
     if (currentCourseId) {
       targetUrl.searchParams.set("course", currentCourseId);
     }
+    targetUrl.searchParams.set("preview", "1");
     if (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)) {
-      targetUrl.searchParams.set(
-        "preview_theme",
-        normalizeThemeId(previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)
-      );
-    } else {
-      var previewThemeId = getPreviewThemeId();
-      if (previewThemeId) {
-        targetUrl.searchParams.set("preview_theme", previewThemeId);
-      }
+      targetUrl.searchParams.set("preview_theme", normalizeThemeId(previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug));
     }
 
     window.location.href = targetUrl.toString();
   }
 
   function navigatePreviewToHome() {
-    var targetUrl = new URL("index.html", window.location.href);
-    targetUrl.searchParams.set("preview", "1");
+    var targetUrl = new URL(appendPreviewParams("index.html"), window.location.href);
     var courseId = getActiveCourseId();
     if (courseId) {
       targetUrl.searchParams.set("course", courseId);
     }
+    targetUrl.searchParams.set("preview", "1");
     if (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)) {
       targetUrl.searchParams.set(
         "preview_theme",
