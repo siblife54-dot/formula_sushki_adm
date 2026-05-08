@@ -750,42 +750,6 @@ function getDefaultAdminTab() {
     }).join("");
   }
 
-  function getPreviewThemeTokens(themeId) {
-    var tokensByTheme = {
-      dark_premium: { bg: "#0E1B2B", card: "#12243A", card2: "#172E4A", text: "#F8FAFC", muted: "#94A3B8", accent: "#8B5CF6", border: "rgba(139, 92, 246, 0.22)", isDark: true },
-      light_clean: { bg: "#F6F7FB", card: "#FFFFFF", card2: "#F1F5F9", text: "#111827", muted: "#64748B", accent: "#2563EB", border: "rgba(15, 23, 42, 0.10)", isDark: false },
-      fitness_power: { bg: "#031812", card: "#041F18", card2: "#062720", text: "#F2FFF8", muted: "#9AC7B8", accent: "#67F08F", border: "rgba(122, 219, 173, 0.22)", isDark: true },
-      soft_women: { bg: "#FFF7F2", card: "#FFFFFF", card2: "#FFEDE5", text: "#3B2520", muted: "#9A6B60", accent: "#DB5F87", border: "rgba(219, 95, 135, 0.22)", isDark: false },
-      business_black: { bg: "#080808", card: "#141414", card2: "#1F1F1F", text: "#F8F5EC", muted: "#A8A29E", accent: "#D4AF37", border: "rgba(212, 175, 55, 0.24)", isDark: true },
-      wow_glass: { bg: "#04111f", card: "rgba(8, 20, 34, 0.72)", card2: "rgba(10, 34, 56, 0.68)", text: "#eef7ff", muted: "#9bb8d1", accent: "#5ff2ff", border: "rgba(255, 255, 255, 0.16)", isDark: true }
-    };
-    return tokensByTheme[normalizeThemeId(themeId)] || tokensByTheme.dark_premium;
-  }
-
-  function renderThemePreview(themeId) {
-    var container = document.getElementById("adminThemePreview");
-    if (!container) return;
-    var normalizedThemeId = normalizeThemeId(themeId);
-    var t = getPreviewThemeTokens(normalizedThemeId);
-    var bgStyle = normalizedThemeId === "wow_glass"
-      ? "radial-gradient(circle at 20% 20%, rgba(95,242,255,0.16), transparent 28%),radial-gradient(circle at 80% 30%, rgba(255,184,77,0.14), transparent 24%),linear-gradient(135deg, #04111f, #0a2238 60%, #06101a)"
-      : t.bg;
-    var btnStyle = normalizedThemeId === "wow_glass"
-      ? "background:linear-gradient(90deg,#5ff2ff,#87fbff);color:#03212a;"
-      : "background:" + t.accent + ";" + (t.isDark ? "color:#07111d;" : "color:#ffffff;");
-
-    container.innerHTML = [
-      '<div class="admin-theme-preview-phone" style="background:', bgStyle, ';color:', t.text, ';border-color:', t.border, ';">',
-      '<div class="admin-theme-preview-header" style="background:', t.card, ';border-color:', t.border, ';">Курс эксперта</div>',
-      '<div class="admin-theme-preview-progress" style="background:', t.card, ';border-color:', t.border, ';"><strong>3 из 10 уроков</strong><span><i style="background:', t.accent, ';"></i></span></div>',
-      '<article class="admin-theme-preview-card" style="background:', t.card2, ';border-color:', t.border, ';">',
-      '<p>День 1</p><h4>Введение</h4><div><button class="admin-theme-preview-button" style="', btnStyle, '">Открыть</button><span class="admin-theme-preview-badge" style="background:', t.card, ';color:', t.muted, ';">Пройдено</span></div></article>',
-      '<article class="admin-theme-preview-card" style="background:', t.card2, ';border-color:', t.border, ';">',
-      '<p>День 2</p><h4>Практика</h4><div><button class="admin-theme-preview-button" style="', btnStyle, '">Открыть</button></div></article>',
-      '</div>'
-    ].join("");
-  }
-
   function renderThemeDirtyState() {
     var dirtyNode = document.getElementById("themeDirtyStatus");
     if (dirtyNode) dirtyNode.hidden = state.selectedThemeId === state.savedThemeId;
@@ -852,7 +816,6 @@ function getDefaultAdminTab() {
     state.selectedThemeId = normalizeThemeId(result.data && result.data.theme_id);
     state.savedThemeId = state.selectedThemeId;
     renderThemeCards();
-    renderThemePreview(state.selectedThemeId);
     renderThemeDirtyState();
     refreshPreview();
   }
@@ -1204,7 +1167,6 @@ function getDefaultAdminTab() {
     state.quills = {};
 
     renderBlocksList();
-    renderPreview();
     refreshPreview();
   }
 
@@ -1331,8 +1293,7 @@ function getDefaultAdminTab() {
     if (!state.selectedLesson) {
       empty.hidden = false;
       panel.hidden = true;
-      renderPreview();
-      return;
+        return;
     }
 
     empty.hidden = true;
@@ -1348,7 +1309,6 @@ function getDefaultAdminTab() {
 
     renderLessonPreviewUploader();
     renderBlocksList();
-    renderPreview();
     refreshPreview();
   }
 
@@ -1617,81 +1577,6 @@ function getDefaultAdminTab() {
     }).join("");
   }
 
-  function renderPreview() {
-    var container = document.getElementById("previewContainer");
-    if (!container) return;
-
-    if (!state.selectedLesson) {
-      container.innerHTML = '<div class="preview-placeholder">Выберите урок, чтобы увидеть предпросмотр.</div>';
-      return;
-    }
-
-    var title = document.getElementById("titleInput") ? document.getElementById("titleInput").value.trim() : (state.selectedLesson.title || "");
-    var subtitle = document.getElementById("subtitleInput") ? document.getElementById("subtitleInput").value.trim() : (state.selectedLesson.subtitle || "");
-    var previewImageUrl = state.selectedLesson.preview_image_url || "";
-
-    var blocksHtml = state.blocks.map(function (block, index) {
-      var textItem = getTextItem(block.id);
-      var textHtml = textItem && stripHtml(textItem.text_html) ? textItem.text_html : "";
-      var videos = getVideoItems(block.id);
-      var files = getFileItems(block.id);
-      var images = getImageItems(block.id);
-
-      var contentParts = [];
-
-      if (textHtml) {
-        contentParts.push('<div class="preview-text"><div class="rich-text-content">' + textHtml + '</div></div>');
-      }
-
-      if (videos.length) {
-        contentParts.push(videos.map(function (video) {
-          return '<div class="preview-video">▶ Видео добавлено (ID: ' + escapeHtml(video.video_id || "") + ')</div>';
-        }).join(""));
-      }
-
-      if (files.length) {
-        contentParts.push([
-          '<div class="preview-files">',
-          files.map(function (file) {
-            return '<button class="preview-file-btn" type="button">📎 ' + escapeHtml(file.file_label || "Файл") + '</button>';
-          }).join(""),
-          '</div>'
-        ].join(""));
-      }
-
-      if (images.length) {
-        contentParts.push(images.map(function (image) {
-          return [
-            '<figure class="preview-inline-image">',
-            '<img src="' + escapeAttr(image.image_url || "") + '" alt="' + escapeAttr(image.image_alt || "Изображение секции") + '">',
-            image.image_alt ? '<figcaption>' + escapeHtml(image.image_alt) + '</figcaption>' : "",
-            '</figure>'
-          ].join("");
-        }).join(""));
-      }
-
-      if (!contentParts.length) {
-        contentParts.push('<div class="preview-placeholder">Контент секции пока пуст.</div>');
-      }
-
-      return [
-        '<section class="preview-block">',
-        '<h5>Секция ' + (index + 1) + '</h5>',
-        contentParts.join(""),
-        '</section>'
-      ].join("");
-    }).join("");
-
-    container.innerHTML = [
-      '<h4 class="preview-lesson-title">' + escapeHtml(title || "Без названия") + '</h4>',
-      '<p class="preview-lesson-subtitle">' + escapeHtml(subtitle || "Подзаголовок пока не добавлен") + '</p>',
-      previewImageUrl
-        ? '<div class="preview-lesson-image"><img src="' + escapeAttr(previewImageUrl) + '" alt="Превью урока"></div>'
-        : "",
-      blocksHtml || '<div class="preview-placeholder" style="margin-top: 14px;">Добавьте первую секцию, чтобы увидеть содержание урока.</div>'
-    ].join("");
-  }
-
   function validateImageFile(file) {
     if (!file) {
       return { isValid: false, message: "Файл не выбран" };
@@ -1837,7 +1722,6 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderLessonPreviewUploader();
-    renderPreview();
     refreshPreview();
   }
 
@@ -1862,8 +1746,7 @@ function getDefaultAdminTab() {
 
     quill.root.innerHTML = container.getAttribute("data-initial-html") || "<p></p>";
     quill.on("text-change", function () {
-      renderPreview();
-    });
+      });
     state.quills[String(blockId)] = quill;
   }
 
@@ -2434,7 +2317,6 @@ function getDefaultAdminTab() {
     } else {
       refreshBlockIndicesInDom();
     }
-    renderPreview();
     refreshPreview();
   }
 
@@ -2542,7 +2424,6 @@ function getDefaultAdminTab() {
     });
 
     renderBlocksList();
-    renderPreview();
     refreshPreview();
     alert("Текст секции сохранён");
   }
@@ -2572,7 +2453,6 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    renderPreview();
     refreshPreview();
     return result.data;
   }
@@ -2603,7 +2483,6 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    renderPreview();
     refreshPreview();
   }
 
@@ -2633,7 +2512,6 @@ function getDefaultAdminTab() {
 
     getItems(blockId).push(result.data);
     renderBlocksList();
-    renderPreview();
     refreshPreview();
     return result.data;
   }
@@ -2678,7 +2556,6 @@ function getDefaultAdminTab() {
     }
 
     renderBlocksList();
-    renderPreview();
     refreshPreview();
   }
 
@@ -2697,8 +2574,7 @@ function getDefaultAdminTab() {
 
       renderLessonsList();
       renderLessonPreviewUploader();
-      renderPreview();
-      refreshPreview();
+        refreshPreview();
       alert("Превью урока загружено");
     } catch (error) {
       console.error(error);
@@ -2876,8 +2752,7 @@ function getDefaultAdminTab() {
         if (!themeId || themeId === state.selectedThemeId) return;
         state.selectedThemeId = normalizeThemeId(themeId);
         renderThemeCards();
-        renderThemePreview(state.selectedThemeId);
-        renderThemeDirtyState();
+            renderThemeDirtyState();
     refreshPreview();
       });
     }
@@ -3064,8 +2939,7 @@ function getDefaultAdminTab() {
         if (id === "titleInput") {
           document.getElementById("editorLessonTitle").textContent = input.value.trim() || "Урок";
         }
-        renderPreview();
-      });
+          });
     });
 
     document.getElementById("blocksList").addEventListener("click", function (event) {
@@ -3352,7 +3226,6 @@ function getDefaultAdminTab() {
     state.selectedThemeId = await fetchCourseThemeId();
     state.savedThemeId = state.selectedThemeId;
     renderThemeCards();
-    renderThemePreview(state.selectedThemeId);
     renderThemeDirtyState();
     refreshPreview();
 
@@ -3363,7 +3236,6 @@ function getDefaultAdminTab() {
       return lesson;
     });
     renderLessonsList();
-    renderPreview();
     refreshPreview();
 
     if (state.lessons.length) {
