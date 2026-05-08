@@ -969,7 +969,7 @@ function getDefaultAdminTab() {
 
     if (result.error) {
       console.error(result.error);
-      throw new Error("Не удалось загрузить материалы урока");
+      throw new Error("Не удалось загрузить секции урока");
     }
 
     return result.data || [];
@@ -987,7 +987,7 @@ function getDefaultAdminTab() {
 
     if (result.error) {
       console.error(result.error);
-      alert("Ошибка загрузки данных материала");
+      alert("Ошибка загрузки данных секции");
       return [];
     }
 
@@ -1154,23 +1154,23 @@ function getDefaultAdminTab() {
     }
 
     if (videos.length && files.length) {
-      return "Материал содержит видео и файлы для скачивания.";
+      return "Секция содержит видео и файлы для скачивания.";
     }
 
     if (images.length && (videos.length || files.length)) {
-      return "Материал содержит изображения и медиа-контент.";
+      return "Секция содержит изображения и медиа-контент.";
     }
 
     if (videos.length) {
-      return "Материал с видеоматериалом.";
+      return "Секция с видеоматериалом.";
     }
 
     if (files.length) {
-      return "Материал с прикреплёнными файлами.";
+      return "Секция с прикреплёнными файлами.";
     }
 
     if (images.length) {
-      return "Материал с изображениями.";
+      return "Секция с изображениями.";
     }
 
     return "Пока контент не добавлен.";
@@ -1213,7 +1213,7 @@ function getDefaultAdminTab() {
     }
 
     if (!badges.length) {
-      badges.push("Материал пустой");
+      badges.push("Пустая секция");
     }
 
     return badges;
@@ -1228,11 +1228,11 @@ function getDefaultAdminTab() {
     var images = getImageItems(blockId);
 
     if (textValue) {
-      lines.push({ type: "text", label: "Текст" });
+      lines.push({ type: "text", label: "Текстовый блок" });
     }
 
     videos.forEach(function () {
-      lines.push({ type: "video", label: "Видео" });
+      lines.push({ type: "video", label: "Видео Kinescope" });
     });
 
     files.forEach(function (item) {
@@ -1253,8 +1253,8 @@ function getDefaultAdminTab() {
     if (!items.length) {
       return [
         '<div class="admin-section-empty-state">',
-        '<p class="admin-section-empty-state__title">Материал пока пустой</p>',
-        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + blockId + '" type="button">Открыть</button>',
+        '<p class="admin-section-empty-state__title">Секция пока пустая</p>',
+        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + blockId + '" type="button">Редактировать</button>',
         '</div>'
       ].join("");
     }
@@ -1265,9 +1265,14 @@ function getDefaultAdminTab() {
     return [
       '<div class="admin-content-mini-list">',
       visible.map(function (item) {
-        return '<span class="admin-content-mini-tag">' + escapeHtml(item.label) + '</span>';
+        return [
+          '<div class="admin-content-mini-list__row">',
+          '<span class="admin-content-mini-list__dot"></span>',
+          '<span>' + escapeHtml(item.label) + '</span>',
+          '</div>'
+        ].join("");
       }).join(""),
-      hiddenCount > 0 ? '<span class="admin-content-mini-list__more">+ ещё ' + hiddenCount + '</span>' : "",
+      hiddenCount > 0 ? '<div class="admin-content-mini-list__more">+ ещё ' + hiddenCount + '</div>' : "",
       '</div>'
     ].join("");
   }
@@ -1445,7 +1450,7 @@ function getDefaultAdminTab() {
     var blocksList = document.getElementById("blocksList");
 
     if (!state.blocks.length) {
-      blocksList.innerHTML = '<div class="admin-empty">У этого урока пока нет материалов</div>';
+      blocksList.innerHTML = '<div class="admin-empty">У этого урока пока нет секций</div>';
       return;
     }
 
@@ -1461,7 +1466,7 @@ function getDefaultAdminTab() {
         '<article class="admin-block-item' + (isActive ? ' active' : '') + '" data-block-id="' + block.id + '">',
         '<div class="admin-block-head">',
         '<div>',
-        '<h4>Материал ' + (index + 1) + '</h4>',
+        '<h4>Секция ' + (index + 1) + '</h4>',
         '<p class="admin-section-summary' + (summary === "Пока контент не добавлен." ? ' admin-section-summary--empty' : '') + '">' + escapeHtml(summary) + '</p>',
         shouldShowBadges ? [
         '<div class="admin-content-badges">',
@@ -1472,9 +1477,9 @@ function getDefaultAdminTab() {
         ].join("") : "",
         '</div>',
         '<div class="admin-inline-actions">',
-        '<button class="admin-btn-ghost block-drag-handle" data-block-id="' + block.id + '" draggable="true" type="button" title="Перетащить материал" aria-label="Перетащить материал">⋮⋮</button>',
-        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + block.id + '" type="button">Открыть</button>',
-        '<button class="admin-btn-ghost duplicate-block-btn" data-block-id="' + block.id + '" type="button" title="Дублировать материал" aria-label="Дублировать материал">⧉</button>',
+        '<button class="admin-btn-ghost block-drag-handle" data-block-id="' + block.id + '" draggable="true" type="button" title="Перетащить секцию" aria-label="Перетащить секцию">⋮⋮</button>',
+        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + block.id + '" type="button">Редактировать</button>',
+        '<button class="admin-btn-ghost duplicate-block-btn" data-block-id="' + block.id + '" type="button" title="Дублировать секцию" aria-label="Дублировать секцию">⧉</button>',
         '<button class="admin-btn-ghost move-block-btn" data-dir="up" data-block-id="' + block.id + '" type="button">↑</button>',
         '<button class="admin-btn-ghost move-block-btn" data-dir="down" data-block-id="' + block.id + '" type="button">↓</button>',
         '<button class="admin-btn-ghost delete-block-btn" data-block-id="' + block.id + '" type="button">Удалить</button>',
@@ -1959,7 +1964,7 @@ function getDefaultAdminTab() {
 
       if (blockInsert.error) {
         console.error(blockInsert.error);
-        alert("Урок создан, но не удалось скопировать материалы полностью");
+        alert("Урок создан, но не удалось скопировать секции полностью");
         break;
       }
 
@@ -1984,7 +1989,7 @@ function getDefaultAdminTab() {
 
       if (itemInsert.error) {
         console.error(itemInsert.error);
-        alert("Урок и материалы созданы, но часть материалов не скопирована");
+        alert("Урок и секции созданы, но часть материалов не скопирована");
         break;
       }
     }
@@ -2025,7 +2030,7 @@ function getDefaultAdminTab() {
 
       if (shiftResult.error) {
         console.error(shiftResult.error);
-        alert("Ошибка дублирования материала");
+        alert("Ошибка дублирования секции");
         return;
       }
 
@@ -2049,7 +2054,7 @@ function getDefaultAdminTab() {
 
     if (blockInsert.error) {
       console.error(blockInsert.error);
-      alert("Ошибка дублирования материала");
+      alert("Ошибка дублирования секции");
       return;
     }
 
@@ -2069,7 +2074,7 @@ function getDefaultAdminTab() {
 
       if (itemInsert.error) {
         console.error(itemInsert.error);
-        alert("Материал создана, но не все материалы удалось скопировать");
+        alert("Секция создана, но не все материалы удалось скопировать");
         continue;
       }
 
@@ -2181,7 +2186,7 @@ function getDefaultAdminTab() {
 
     var lessonToDelete = state.selectedLesson;
     var confirmed = window.confirm(
-      "Удалить урок полностью? Будут удалены все материалы, текст, видео и файлы этого урока. Это действие нельзя отменить."
+      "Удалить урок полностью? Будут удалены все секции, текст, видео и файлы этого урока. Это действие нельзя отменить."
     );
     if (!confirmed) return;
 
@@ -2192,7 +2197,7 @@ function getDefaultAdminTab() {
 
     if (lessonBlocksResult.error) {
       console.error(lessonBlocksResult.error);
-      alert("Не удалось получить материалы урока перед удалением");
+      alert("Не удалось получить секции урока перед удалением");
       return;
     }
 
@@ -2220,7 +2225,7 @@ function getDefaultAdminTab() {
 
     if (deleteBlocksResult.error) {
       console.error(deleteBlocksResult.error);
-      alert("Не удалось удалить материалы урока");
+      alert("Не удалось удалить секции урока");
       return;
     }
 
@@ -2287,7 +2292,7 @@ function getDefaultAdminTab() {
 
     if (result.error) {
       console.error(result.error);
-      alert("Ошибка создания материала: " + result.error.message);
+      alert("Ошибка создания секции: " + result.error.message);
       return;
     }
 
@@ -2327,7 +2332,7 @@ function getDefaultAdminTab() {
 
     if (firstUpdate.error) {
       console.error(firstUpdate.error);
-      alert("Ошибка перемещения материала");
+      alert("Ошибка перемещения секции");
       return;
     }
 
@@ -2338,7 +2343,7 @@ function getDefaultAdminTab() {
 
     if (secondUpdate.error) {
       console.error(secondUpdate.error);
-      alert("Ошибка перемещения материала");
+      alert("Ошибка перемещения секции");
       return;
     }
 
@@ -2389,7 +2394,7 @@ function getDefaultAdminTab() {
     cards.forEach(function (card, index) {
       var title = card.querySelector(".admin-block-head h4");
       if (title) {
-        title.textContent = "Материал " + (index + 1);
+        title.textContent = "Секция " + (index + 1);
       }
     });
   }
@@ -2420,7 +2425,7 @@ function getDefaultAdminTab() {
 
       if (updateResult.error) {
         console.error(updateResult.error);
-        alert("Ошибка сохранения нового порядка материалов");
+        alert("Ошибка сохранения нового порядка секций");
         return;
       }
     }
@@ -2441,7 +2446,7 @@ function getDefaultAdminTab() {
     var client = getClient();
     if (!client) return;
 
-    var confirmDelete = window.confirm("Удалить материал и весь его контент?");
+    var confirmDelete = window.confirm("Удалить секцию и все её материалы?");
     if (!confirmDelete) return;
 
     var deleteItemsResult = await client
@@ -2451,7 +2456,7 @@ function getDefaultAdminTab() {
 
     if (deleteItemsResult.error) {
       console.error(deleteItemsResult.error);
-      alert("Ошибка удаления контента материала!");
+      alert("Ошибка удаления материалов секции!");
       return;
     }
 
@@ -2462,7 +2467,7 @@ function getDefaultAdminTab() {
 
     if (deleteBlockResult.error) {
       console.error(deleteBlockResult.error);
-      alert("Ошибка удаления материала");
+      alert("Ошибка удаления секции");
       return;
     }
 
@@ -2531,7 +2536,7 @@ function getDefaultAdminTab() {
 
     if (result.error) {
       console.error(result.error);
-      alert("Ошибка сохранения текста материала");
+      alert("Ошибка сохранения текста секции");
       return;
     }
 
@@ -2542,7 +2547,7 @@ function getDefaultAdminTab() {
 
     renderBlocksList();
     refreshPreviewData();
-    alert("Текст материала сохранён");
+    alert("Текст секции сохранён");
   }
 
   async function createVideoItem(blockId, videoId) {
@@ -2623,7 +2628,7 @@ function getDefaultAdminTab() {
 
     if (result.error) {
       console.error(result.error);
-      alert("Ошибка сохранения картинки в материале");
+      alert("Ошибка сохранения картинки в секции");
       return null;
     }
 
