@@ -100,92 +100,103 @@
               </div>
             </div>
 
-            <div class="admin-form admin-form--lesson">
-              <label>
-                Название урока
-                <input id="titleInput" type="text" placeholder="Введите название урока" />
-              </label>
-
-              <label>
-                Подзаголовок
-                <input id="subtitleInput" type="text" placeholder="Введите подзаголовок" />
-              </label>
-
-              <label>
-                <span class="admin-label-title">
-                  <span>Порядковый номер</span>
-                  <button
-                    class="admin-tooltip-trigger"
-                    type="button"
-                    aria-label="Подсказка про порядковый номер"
-                    data-tooltip-title="Что это?"
-                    data-tooltip-content="Определяет место урока в списке и очередность открытия.
-                    
-                    Пример:
-                    1 — первый урок
-                    2 — второй урок
-                    3 — третий урок
-                    
-                    Если включено последовательное открытие — уроки открываются по порядку."
-                  >?</button>
-                </span>
-                <input id="dayNumberInput" type="number" min="1" placeholder="Например, 7" />
-              </label>
-
-              <label>
-                <span class="admin-label-title">
-                  <span>Метка урока</span>
-                  <button
-                    class="admin-tooltip-trigger"
-                    type="button"
-                    aria-label="Подсказка про метку урока"
-                    data-tooltip-title="Что это?"
-                    data-tooltip-content="Это подпись, которую увидит ученик рядом с уроком.
-                    
-                    Можно писать:
-                    День 1
-                    Урок 3
-                    Модуль 2
-                    Бонус
-                    Практика
-                    
-                    Не влияет на порядок."
-                  >?</button>
-                </span>
-                <input id="lessonLabelInput" type="text" placeholder="Например: День 1, Урок 3, Модуль 2, Бонус" />
-              </label>
+            <div class="admin-lesson-editor-tabs" role="tablist" aria-label="Редактор урока">
+              <button class="admin-lesson-editor-tab-btn active" type="button" data-lesson-editor-tab="main">Основное</button>
+              <button class="admin-lesson-editor-tab-btn" type="button" data-lesson-editor-tab="materials">Материалы</button>
+              <button class="admin-lesson-editor-tab-btn" type="button" data-lesson-editor-tab="preview">Превью</button>
             </div>
 
-            <section class="admin-lesson-preview-uploader">
-              <div class="admin-lesson-preview-uploader__header">
-                <h3>Превью урока</h3>
+            <section class="admin-lesson-editor-tab-panel active" data-lesson-editor-panel="main">
+              <div class="admin-form admin-form--lesson">
+                <label>
+                  Название урока
+                  <input id="titleInput" type="text" placeholder="Введите название урока" />
+                </label>
+
+                <label>
+                  Подзаголовок
+                  <input id="subtitleInput" type="text" placeholder="Введите подзаголовок" />
+                </label>
+
+                <label>
+                  <span class="admin-label-title">
+                    <span>Порядковый номер</span>
+                    <button
+                      class="admin-tooltip-trigger"
+                      type="button"
+                      aria-label="Подсказка про порядковый номер"
+                      data-tooltip-title="Что это?"
+                      data-tooltip-content="Определяет место урока в списке и очередность открытия.
+                      
+                      Пример:
+                      1 — первый урок
+                      2 — второй урок
+                      3 — третий урок
+                      
+                      Если включено последовательное открытие — уроки открываются по порядку."
+                    >?</button>
+                  </span>
+                  <input id="dayNumberInput" type="number" min="1" placeholder="Например, 7" />
+                </label>
+
+                <label>
+                  <span class="admin-label-title">
+                    <span>Метка урока</span>
+                    <button
+                      class="admin-tooltip-trigger"
+                      type="button"
+                      aria-label="Подсказка про метку урока"
+                      data-tooltip-title="Что это?"
+                      data-tooltip-content="Это подпись, которую увидит ученик рядом с уроком.
+                      
+                      Можно писать:
+                      День 1
+                      Урок 3
+                      Модуль 2
+                      Бонус
+                      Практика
+                      
+                      Не влияет на порядок."
+                    >?</button>
+                  </span>
+                  <input id="lessonLabelInput" type="text" placeholder="Например: День 1, Урок 3, Модуль 2, Бонус" />
+                </label>
               </div>
-              <div id="lessonPreviewBox" class="admin-lesson-preview-box"></div>
-              <p class="admin-hint admin-lesson-preview-uploader__hint">
-                Рекомендуемый формат: JPG или PNG, соотношение сторон 4:3.<br>
-                Оптимальный размер: 1600×1200 px.<br>
-                Можно загружать только JPG, PNG или WEBP размером до 5 MB.
-              </p>
-              <div class="admin-lesson-preview-uploader__actions">
-                <input id="lessonPreviewFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
-                <button id="uploadLessonPreviewBtn" class="btn btn-primary" type="button">Загрузить превью</button>
-                <button id="removeLessonPreviewBtn" class="admin-btn-ghost" type="button" hidden>Удалить превью</button>
-              </div>
+            </div>
+
+            <section class="admin-lesson-editor-tab-panel" data-lesson-editor-panel="materials">
+              <section class="admin-blocks">
+                <div class="admin-blocks-header">
+                  <h3>Материалы урока</h3>
+                  <div class="admin-material-actions">
+                    <button class="btn btn-primary add-material-btn" data-material-type="text" type="button">+ Текст</button>
+                    <button class="btn btn-primary add-material-btn" data-material-type="video" type="button">+ Видео</button>
+                    <button class="btn btn-primary add-material-btn" data-material-type="image" type="button">+ Картинка</button>
+                    <button class="btn btn-primary add-material-btn" data-material-type="file" type="button">+ Файл</button>
+                  </div>
+                </div>
+                <div id="blocksList" class="admin-blocks-list"></div>
+              </section>
             </section>
-          </section>
 
-          <section class="admin-blocks">
-            <div class="admin-blocks-header">
-              <h3>Материалы урока</h3>
-              <div class="admin-material-actions">
-                <button class="btn btn-primary add-material-btn" data-material-type="text" type="button">+ Текст</button>
-                <button class="btn btn-primary add-material-btn" data-material-type="video" type="button">+ Видео</button>
-                <button class="btn btn-primary add-material-btn" data-material-type="image" type="button">+ Картинка</button>
-                <button class="btn btn-primary add-material-btn" data-material-type="file" type="button">+ Файл</button>
-              </div>
-            </div>
-
-            <div id="blocksList" class="admin-blocks-list"></div>
+            <section class="admin-lesson-editor-tab-panel" data-lesson-editor-panel="preview">
+              <section class="admin-lesson-preview-uploader">
+                <div class="admin-lesson-preview-uploader__header">
+                  <h3>Превью урока</h3>
+                </div>
+                <div id="lessonPreviewBox" class="admin-lesson-preview-box"></div>
+                <p class="admin-hint admin-lesson-preview-uploader__hint">
+                  Рекомендуемый формат: JPG или PNG, соотношение сторон 4:3.<br>
+                  Оптимальный размер: 1600×1200 px.<br>
+                  Можно загружать JPG, PNG или WEBP размером до 5 MB.
+                </p>
+                <div class="admin-lesson-preview-uploader__actions">
+                  <input id="lessonPreviewFileInput" type="file" accept="image/jpeg,image/png,image/webp" hidden />
+                  <button id="uploadLessonPreviewBtn" class="btn btn-primary" type="button">Загрузить превью</button>
+                  <button id="removeLessonPreviewBtn" class="admin-btn-ghost" type="button" hidden>Удалить превью</button>
+                </div>
+              </section>
+            </section>
           </section>
         </section>
 
