@@ -105,6 +105,22 @@
       }
     }, 500);
   }
+
+  function navigatePreviewToLesson(lesson) {
+    var iframe = document.getElementById("previewIframe");
+    if (!iframe || !iframe.contentWindow || !lesson) return;
+
+    var lessonId = lesson.lesson_id || lesson.id;
+    if (!lessonId) return;
+
+    try {
+      iframe.contentWindow.postMessage({
+        type: "mindcore:navigate-preview",
+        target: "lesson",
+        lessonId: String(lessonId)
+      }, window.location.origin);
+    } catch (error) {}
+  }
 function getDefaultAdminTab() {
     try {
       var stored = window.localStorage.getItem("admin_active_tab");
@@ -1808,6 +1824,7 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderEditor();
+    navigatePreviewToLesson(lesson);
   }
 
   async function duplicateLesson(lessonDbId) {

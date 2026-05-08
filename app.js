@@ -1104,6 +1104,61 @@ document.addEventListener("click", function (e) {
     }
   }
 
+  function navigatePreviewToLesson(lessonId) {
+    if (!lessonId) return;
+
+    var nextId = String(lessonId);
+    var currentUrl = new URL(window.location.href);
+    var isLessonPage = /\/lesson\.html$/i.test(currentUrl.pathname);
+    var currentLessonId = currentUrl.searchParams.get("id");
+    var currentCourseId = currentUrl.searchParams.get("course") || getActiveCourseId();
+
+    if (isLessonPage && currentLessonId === nextId) {
+      return;
+    }
+
+    var targetUrl = new URL("lesson.html", window.location.href);
+    targetUrl.searchParams.set("id", nextId);
+    targetUrl.searchParams.set("preview", "1");
+    if (currentCourseId) {
+      targetUrl.searchParams.set("course", currentCourseId);
+    }
+    if (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)) {
+      targetUrl.searchParams.set(
+        "preview_theme",
+        normalizeThemeId(previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)
+      );
+    } else {
+      var previewThemeId = getPreviewThemeId();
+      if (previewThemeId) {
+        targetUrl.searchParams.set("preview_theme", previewThemeId);
+      }
+    }
+
+    window.location.href = targetUrl.toString();
+  }
+
+  function navigatePreviewToHome() {
+    var targetUrl = new URL("index.html", window.location.href);
+    targetUrl.searchParams.set("preview", "1");
+    var courseId = getActiveCourseId();
+    if (courseId) {
+      targetUrl.searchParams.set("course", courseId);
+    }
+    if (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)) {
+      targetUrl.searchParams.set(
+        "preview_theme",
+        normalizeThemeId(previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug)
+      );
+    } else {
+      var previewThemeId = getPreviewThemeId();
+      if (previewThemeId) {
+        targetUrl.searchParams.set("preview_theme", previewThemeId);
+      }
+    }
+    window.location.href = targetUrl.toString();
+  }
+
   window.addEventListener("message", async function (event) {
     if (!isPreviewMode()) return;
     if (!event || !event.data) return;
@@ -1121,6 +1176,18 @@ document.addEventListener("click", function (e) {
       await refreshPreviewDataWithoutReload();
       if (event.data.preservePreviewTheme && previewThemeOverride) {
         applyThemeToWebApp(previewThemeOverride);
+      }
+      return;
+    }
+
+    if (event.data.type === "mindcore:navigate-preview") {
+      if (event.data.target === "lesson" && event.data.lessonId) {
+        navigatePreviewToLesson(event.data.lessonId);
+        return;
+      }
+
+      if (event.data.target === "home") {
+        navigatePreviewToHome();
       }
     }
   });
