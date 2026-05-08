@@ -115,6 +115,29 @@
     iframe.setAttribute("src", nextUrl.toString());
   }
 
+  function updatePreviewThemeInCurrentUrl(themeId) {
+    var iframe = getPreviewIframe();
+    if (!iframe) return;
+
+    var normalizedThemeId = normalizeThemeId(themeId || currentPreviewThemeId || state.selectedThemeId);
+    var currentUrl;
+
+    try {
+      currentUrl = iframe.contentWindow && iframe.contentWindow.location && iframe.contentWindow.location.href
+        ? new URL(iframe.contentWindow.location.href)
+        : new URL(iframe.getAttribute("src") || iframe.src, window.location.origin);
+    } catch (error) {
+      currentUrl = new URL(iframe.getAttribute("src") || iframe.src || getPreviewUrl(normalizedThemeId), window.location.origin);
+    }
+
+    currentUrl.searchParams.set("preview", "1");
+    currentUrl.searchParams.set("preview_theme", normalizedThemeId);
+    var courseId = getActiveCourseId();
+    if (courseId) currentUrl.searchParams.set("course", courseId);
+
+    iframe.src = currentUrl.toString();
+  }
+
   function sendPreviewMessage(message) {
     var iframe = getPreviewIframe();
     if (!iframe || !iframe.contentWindow) {
@@ -1845,7 +1868,8 @@ function getDefaultAdminTab() {
     state.quills[String(blockId)] = quill;
   }
 
-  async function selectLessonById(lessonDbId) {
+  async function selectLessonById(lessonDbId, options) {
+    options = options || {};
     var lesson = state.lessons.find(function (item) {
       return String(item.id) === String(lessonDbId);
     });
@@ -1864,7 +1888,9 @@ function getDefaultAdminTab() {
 
     renderLessonsList();
     renderEditor();
-    navigatePreviewToLesson(lesson.lesson_id || lesson.id);
+    if (options.navigatePreview !== false) {
+      navigatePreviewToLesson(lesson.lesson_id || lesson.id);
+    }
   }
 
   async function duplicateLesson(lessonDbId) {
@@ -2850,7 +2876,7 @@ function getDefaultAdminTab() {
         currentPreviewThemeId = state.selectedThemeId;
         renderThemeCards();
         renderThemeDirtyState();
-        setPreviewIframeUrlForScreen(getPreviewScreenState(), currentPreviewThemeId);
+        updatePreviewThemeInCurrentUrl(currentPreviewThemeId);
         applyThemeToLivePreview(getThemePresetById(state.selectedThemeId));
       });
     }
@@ -3341,7 +3367,7 @@ function getDefaultAdminTab() {
     refreshPreviewData();
 
     if (state.lessons.length) {
-      await selectLessonById(state.lessons[0].id);
+      await selectLessonById(state.lessons[0].id, { navigatePreview: false });
     }
   }
 
