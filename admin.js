@@ -1130,17 +1130,17 @@ function getDefaultAdminTab() {
     return "";
   }
 
-  function extractKinescopeVideoId(value) {
+  function parseVideoInputToEmbedUrl(value) {
     var input = String(value || "").trim();
-    if (!input) return "";
+    if (!input) return null;
 
     var srcMatch = input.match(/<iframe[\s\S]*?\ssrc\s*=\s*["']([^"']+)["']/i);
     var candidate = srcMatch && srcMatch[1] ? srcMatch[1].trim() : input;
-    if (!candidate) return "";
+    if (!candidate) return null;
 
-    var directIdPattern = /^[A-Za-z0-9_-]{6,}$/;
-    if (directIdPattern.test(candidate) && candidate.indexOf("http") !== 0) {
-      return candidate;
+    var kinescopeIdPattern = /^[A-Za-z0-9_-]{6,}$/;
+    if (kinescopeIdPattern.test(candidate) && candidate.indexOf("http") !== 0) {
+      return "https://kinescope.io/embed/" + candidate;
     }
 
     if (candidate.indexOf("//") === 0) {
@@ -1151,25 +1151,42 @@ function getDefaultAdminTab() {
     try {
       url = new URL(candidate);
     } catch (error) {
-      return "";
+      return null;
     }
 
     var host = (url.hostname || "").toLowerCase();
-    if (host !== "kinescope.io" && host !== "www.kinescope.io") {
-      return "";
+    var pathParts = (url.pathname || "").split("/").filter(Boolean);
+
+    if (host === "youtu.be" && pathParts[0]) {
+      return "https://www.youtube.com/embed/" + pathParts[0];
     }
 
-    var pathParts = (url.pathname || "")
-      .split("/")
-      .filter(Boolean);
-    if (!pathParts.length) return "";
-
-    var videoId = pathParts[0] === "embed" ? pathParts[1] : pathParts[0];
-    if (!videoId || !directIdPattern.test(videoId)) {
-      return "";
+    if (host === "youtube.com" || host === "www.youtube.com") {
+      var youtubeId = url.searchParams.get("v");
+      if (!youtubeId && pathParts[0] === "embed" && pathParts[1]) youtubeId = pathParts[1];
+      if (youtubeId) return "https://www.youtube.com/embed/" + youtubeId;
     }
 
-    return videoId;
+    if ((host === "vimeo.com" || host === "www.vimeo.com") && pathParts[0]) {
+      return "https://player.vimeo.com/video/" + pathParts[0];
+    }
+
+    if ((host === "player.vimeo.com") && pathParts[0] === "video" && pathParts[1]) {
+      return "https://player.vimeo.com/video/" + pathParts[1];
+    }
+
+    if (host === "kinescope.io" || host === "www.kinescope.io") {
+      if (!pathParts.length) return null;
+      var videoId = pathParts[0] === "embed" ? pathParts[1] : pathParts[0];
+      if (!videoId || !kinescopeIdPattern.test(videoId)) return null;
+      return "https://kinescope.io/embed/" + videoId;
+    }
+
+    if (/^https?:\/\//i.test(candidate)) {
+      return candidate;
+    }
+
+    return null;
   }
 
   function getSectionSummary(blockId) {
@@ -1616,21 +1633,19 @@ function getDefaultAdminTab() {
         label: "Как добавить видео ?",
         className: "admin-tooltip-trigger--link",
         content: [
-          "1. Загрузите видео в Kinescope",
-          "2. Откройте видео",
-          "3. Скопируйте ссылку или embed-код",
-          "4. Вставьте сюда",
-          "",
-          "Система сама определит ID видео."
+          "1. Загрузите видео на YouTube, Vimeo или Kinescope",
+          "2. Скопируйте ссылку на видео",
+          "3. Вставьте ссылку сюда",
+          "4. Система сама определит платформу"
         ].join("\n")
       }),
       '</div>',
       '</div>',
       '<div class="admin-section-form" id="videoForm-' + blockId + '">',
-      '<label>Ссылка или ID видео Kinescope',
-      '<input class="video-id-input" data-block-id="' + blockId + '" type="text" placeholder="https://kinescope.io/embed/..." />',
+      '<label>Ссылка на видео',
+      '<input class="video-id-input" data-block-id="' + blockId + '" type="text" placeholder="https://..." />',
       '</label>',
-      '<p class="admin-hint">Поддерживаются ссылка на видео, embed-ссылка, iframe-код или ID.</p>',
+      '<p class="admin-hint">Поддерживаются YouTube, Vimeo, Kinescope, iframe-код и прямые ссылки.</p>',
       '<button class="btn btn-primary save-video-btn" data-block-id="' + blockId + '" type="button">Сохранить видео</button>',
       '</div>',
       '<div class="admin-mini-cards">',
@@ -3228,17 +3243,17 @@ function getDefaultAdminTab() {
 
         var videoValue = videoInput.value.trim();
         if (!videoValue) {
-          alert("Введите ссылку или ID видео Kinescope");
+          alert("Введите ссылку на видео");
           return;
         }
 
-        var videoId = extractKinescopeVideoId(videoValue);
-        if (!videoId) {
-          alert("Не удалось определить ID видео. Вставьте ссылку Kinescope или ID видео.");
+        var videoEmbedUrl = parseVideoInputToEmbedUrl(videoValue);
+        if (!videoEmbedUrl) {
+          alert("Не удалось определить ссылку на видео. Поддерживаются YouTube, Vimeo и Kinescope.");
           return;
         }
 
-        void createVideoItem(videoBlockId, videoId).then(function (createdItem) {
+        void createVideoItem(videoBlockId, videoEmbedUrl).then(function (createdItem) {
           if (!createdItem) return;
           videoInput.value = "";
         });

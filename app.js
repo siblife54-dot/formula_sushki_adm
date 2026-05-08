@@ -726,6 +726,13 @@
     return { mode: "none", url: "" };
   }
 
+  function getLessonBlockVideoUrl(value) {
+    var raw = String(value || "").trim();
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return "https://kinescope.io/embed/" + raw;
+  }
+
   // ===== Attachments: parse + tags =====
   function parseAttachments(raw) {
     if (!raw) return [];
@@ -847,12 +854,14 @@
             }
 
             if (item.item_type === "video" && item.video_id) {
+              var embedUrl = getLessonBlockVideoUrl(item.video_id);
+              if (!embedUrl) return;
               html += [
                 '<div class="lesson-media">',
                 '<div class="lesson-media__frame">',
                 '<iframe',
                 'class="lesson-media__content"',
-                'src="https://kinescope.io/embed/' + escapeAttr(item.video_id) + '"',
+                'src="' + escapeAttr(embedUrl) + '"',
                 'frameborder="0"',
                 'allow="autoplay; fullscreen; picture-in-picture"',
                 'allowfullscreen',
