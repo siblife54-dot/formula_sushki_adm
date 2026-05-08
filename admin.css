@@ -127,7 +127,7 @@ body[data-page="admin"] {
 }
 
 .admin-sidebar__top p {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
   font-size: 13px;
 }
@@ -678,7 +678,7 @@ body[data-page="admin"] {
 .admin-form {
   margin-top: 18px;
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .admin-form--lesson {
@@ -864,25 +864,25 @@ body[data-page="admin"] {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 10px;
+  gap: 14px;
 }
 
 .admin-blocks-header h3 {
   margin: 0;
-  font-size: 24px;
+  font-size: 28px;
 }
 
 .admin-blocks-list {
   margin-top: 16px;
   display: grid;
-  gap: 10px;
+  gap: 14px;
 }
 
 .admin-block-item {
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 14px;
-  padding: 14px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
   transition: border-color 0.24s ease, box-shadow 0.24s ease, background 0.24s ease, transform 0.16s ease;
 }
 
@@ -934,7 +934,7 @@ body[data-page="admin"] {
 }
 
 .admin-section-summary {
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: #dbe6fc;
   font-size: 13px;
   line-height: 1.45;
@@ -962,18 +962,24 @@ body[data-page="admin"] {
 
 .admin-content-mini-list {
   margin-top: 10px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
+  display: grid;
+  gap: 6px;
 }
 
-.admin-content-mini-tag {
-  border: 1px solid color-mix(in srgb, var(--accent) 35%, var(--border));
-  border-radius: 999px;
-  padding: 4px 10px;
-  font-size: 12px;
+.admin-content-mini-list__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   color: #dbe6fc;
-  background: rgba(22, 40, 62, 0.7);
+  font-size: 12px;
+}
+
+.admin-content-mini-list__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 75%, #fff 25%);
+  flex: 0 0 auto;
 }
 
 .admin-content-mini-list__more {
@@ -1006,10 +1012,10 @@ body[data-page="admin"] {
 
 .admin-section-empty-state {
   margin-top: 10px;
-  border: 1px dashed color-mix(in srgb, var(--border) 60%, transparent);
-  border-radius: 10px;
+  border: 1px dashed color-mix(in srgb, var(--border) 78%, transparent);
+  border-radius: 12px;
   padding: 10px;
-  background: rgba(10, 20, 35, 0.22);
+  background: rgba(10, 20, 35, 0.36);
 }
 
 .admin-section-empty-state__title {
@@ -1059,8 +1065,9 @@ body[data-page="admin"] {
 }
 
 .admin-block-editor-inline {
-  margin-top: 12px;
-  padding-top: 8px;
+  margin-top: 14px;
+  border-top: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  padding-top: 14px;
 }
 
 .admin-tabs {
@@ -1078,11 +1085,11 @@ body[data-page="admin"] {
 }
 
 .admin-tab-panel {
-  margin-top: 10px;
-  border: 1px solid color-mix(in srgb, var(--border) 58%, transparent);
-  border-radius: 12px;
-  padding: 12px;
-  background: rgba(8, 18, 30, 0.3);
+  margin-top: 12px;
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 14px;
+  padding: 14px;
+  background: rgba(8, 18, 30, 0.42);
 }
 
 .admin-tab-panel h5 {
@@ -1113,11 +1120,11 @@ body[data-page="admin"] {
 .admin-section-form {
   display: grid;
   gap: 10px;
-  margin-bottom: 10px;
-  padding: 10px 0 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  margin-bottom: 12px;
+  padding: 12px;
+  border: 1px dashed var(--border);
+  border-radius: 12px;
+  background: rgba(10, 20, 35, 0.52);
 }
 
 .admin-hint {
