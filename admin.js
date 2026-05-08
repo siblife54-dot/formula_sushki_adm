@@ -79,14 +79,22 @@
     iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
   }
 
-  function refreshPreview() {
+  function refreshPreview(options) {
+    var opts = options || {};
     var iframe = document.getElementById("previewIframe");
     if (!iframe) return;
     try {
       if (iframe.contentWindow) {
-        iframe.contentWindow.postMessage({ type: "mindcore:refresh-preview-data" }, window.location.origin);
+        iframe.contentWindow.postMessage({
+          type: "mindcore:refresh-preview-data",
+          preservePreviewTheme: !!opts.preservePreviewTheme
+        }, window.location.origin);
       }
     } catch (error) {}
+
+    if (opts.skipFallbackReload) {
+      return;
+    }
 
     window.clearTimeout(refreshPreview._fallbackTimer);
     refreshPreview._fallbackTimer = window.setTimeout(function () {
@@ -844,10 +852,11 @@ function getDefaultAdminTab() {
 
     state.selectedThemeId = normalizeThemeId(result.data && result.data.theme_id);
     state.savedThemeId = state.selectedThemeId;
+    var selectedTheme = getThemePresetById(state.selectedThemeId);
     renderThemeCards();
     renderThemeDirtyState();
-    applyThemeToLivePreview(getThemePresetById(state.selectedThemeId));
-    refreshPreview();
+    applyThemeToLivePreview(selectedTheme);
+    refreshPreview({ preservePreviewTheme: true, skipFallbackReload: true });
   }
 
   async function fetchLessons() {
