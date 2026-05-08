@@ -1322,6 +1322,27 @@ body[data-page="admin"] {
 
 .admin-tab-panel[hidden] { display: none !important; }
 
+.admin-inner-tabs {
+  display: flex;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+
+.admin-inner-tab {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding: 7px 12px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.admin-inner-tab.is-active {
+  border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+  background: color-mix(in srgb, var(--accent) 24%, rgba(255,255,255,0.06));
+  color: var(--text);
+}
+
 .admin-connections-grid {
   display: grid;
   gap: 16px;
