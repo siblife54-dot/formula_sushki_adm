@@ -1075,6 +1075,16 @@ body[data-page="admin"] {
   gap: 8px;
 }
 
+.admin-tabs--single {
+  align-items: center;
+  justify-content: space-between;
+}
+
+.admin-tabs-title {
+  margin: 0;
+  font-size: 16px;
+}
+
 .admin-tab-btn {
   border: 1px solid var(--border);
   border-radius: 10px;

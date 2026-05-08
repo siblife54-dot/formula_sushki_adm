@@ -1013,6 +1013,30 @@ function getDefaultAdminTab() {
     return state.blockItemsByBlockId[String(blockId)] || [];
   }
 
+  function getMaterialPrimaryType(blockId) {
+    var items = getItems(blockId);
+    if (!items.length) return "text";
+
+    var firstType = String(items[0].item_type || "").trim();
+    if (["text", "video", "image", "file"].indexOf(firstType) >= 0) {
+      return firstType;
+    }
+    return "text";
+  }
+
+  function getMaterialTypes(blockId) {
+    var map = {};
+    getItems(blockId).forEach(function (item) {
+      if (!item || !item.item_type) return;
+      map[item.item_type] = true;
+    });
+    return Object.keys(map);
+  }
+
+  function isMixedMaterial(blockId) {
+    return getMaterialTypes(blockId).length > 1;
+  }
+
   function getTextItem(blockId) {
     return getItems(blockId).find(function (item) {
       return item.item_type === "text";
@@ -1191,25 +1215,34 @@ function getDefaultAdminTab() {
 
   function getContentBadges(blockId) {
     var badges = [];
+    var types = getMaterialTypes(blockId);
     var textPreview = shortenText(stripHtml((getTextItem(blockId) || {}).text_html || ""), 160);
     var videos = getVideoItems(blockId);
     var files = getFileItems(blockId);
     var images = getImageItems(blockId);
+    var primaryType = getMaterialPrimaryType(blockId);
 
-    if (textPreview) {
-      badges.push("Текст");
-    }
-    if (videos.length) {
-      badges.push("Видео: " + videos.length);
-    }
-    if (files.length) {
-      var fileNames = files.slice(0, 2).map(function (item) {
-        return item.file_label || "Без названия";
-      }).join(", ");
-      badges.push("Файлы: " + fileNames + (files.length > 2 ? " +" + (files.length - 2) : ""));
-    }
-    if (images.length) {
-      badges.push("Картинки: " + images.length);
+    if (types.length === 1) {
+      if (primaryType === "text" && textPreview) badges.push("Текст");
+      if (primaryType === "video" && videos.length) badges.push("Видео");
+      if (primaryType === "file" && files.length) badges.push("Файл");
+      if (primaryType === "image" && images.length) badges.push("Картинка");
+    } else {
+      if (textPreview) {
+        badges.push("Текст");
+      }
+      if (videos.length) {
+        badges.push("Видео: " + videos.length);
+      }
+      if (files.length) {
+        var fileNames = files.slice(0, 2).map(function (item) {
+          return item.file_label || "Без названия";
+        }).join(", ");
+        badges.push("Файлы: " + fileNames + (files.length > 2 ? " +" + (files.length - 2) : ""));
+      }
+      if (images.length) {
+        badges.push("Картинки: " + images.length);
+      }
     }
 
     if (!badges.length) {
@@ -1493,24 +1526,37 @@ function getDefaultAdminTab() {
   }
 
   function renderSectionEditor(blockId) {
+    var isMixed = isMixedMaterial(blockId);
+    var primaryType = getMaterialPrimaryType(blockId);
+    var effectiveTab = isMixed ? (state.activeSectionTab || "text") : primaryType;
+    var titleByType = {
+      text: "Редактирование текста",
+      video: "Редактирование видео",
+      file: "Редактирование файла",
+      image: "Редактирование картинки"
+    };
+
     return [
       '<div class="admin-block-editor-inline" id="blockEditor-' + blockId + '">',
-      '<div class="admin-tabs">',
-      '<button class="admin-tab-btn' + (state.activeSectionTab === 'text' ? ' active' : '') + '" type="button" data-section-tab="text" data-block-id="' + blockId + '">Текст</button>',
-      '<button class="admin-tab-btn' + (state.activeSectionTab === 'video' ? ' active' : '') + '" type="button" data-section-tab="video" data-block-id="' + blockId + '">Видео</button>',
-      '<button class="admin-tab-btn' + (state.activeSectionTab === 'file' ? ' active' : '') + '" type="button" data-section-tab="file" data-block-id="' + blockId + '">Файлы</button>',
-      '<button class="admin-tab-btn' + (state.activeSectionTab === 'image' ? ' active' : '') + '" type="button" data-section-tab="image" data-block-id="' + blockId + '">Картинка</button>',
+      '<div class="admin-tabs' + (isMixed ? '' : ' admin-tabs--single') + '">',
+      isMixed ? [
+      '<button class="admin-tab-btn' + (effectiveTab === 'text' ? ' active' : '') + '" type="button" data-section-tab="text" data-block-id="' + blockId + '">Текст</button>',
+      '<button class="admin-tab-btn' + (effectiveTab === 'video' ? ' active' : '') + '" type="button" data-section-tab="video" data-block-id="' + blockId + '">Видео</button>',
+      '<button class="admin-tab-btn' + (effectiveTab === 'file' ? ' active' : '') + '" type="button" data-section-tab="file" data-block-id="' + blockId + '">Файлы</button>',
+      '<button class="admin-tab-btn' + (effectiveTab === 'image' ? ' active' : '') + '" type="button" data-section-tab="image" data-block-id="' + blockId + '">Картинка</button>'
+      ].join("") : ('<h5 class="admin-tabs-title">' + titleByType[effectiveTab] + '</h5>'),
       '<button class="admin-btn-ghost close-inline-editor-btn" type="button">Закрыть</button>',
       '</div>',
-      renderSectionTabContent(blockId),
+      renderSectionTabContent(blockId, effectiveTab),
       '</div>'
     ].join("");
   }
 
-  function renderSectionTabContent(blockId) {
-    if (state.activeSectionTab === "video") return renderVideoTab(blockId);
-    if (state.activeSectionTab === "file") return renderFileTab(blockId);
-    if (state.activeSectionTab === "image") return renderImageTab(blockId);
+  function renderSectionTabContent(blockId, tabName) {
+    var activeTab = tabName || state.activeSectionTab;
+    if (activeTab === "video") return renderVideoTab(blockId);
+    if (activeTab === "file") return renderFileTab(blockId);
+    if (activeTab === "image") return renderImageTab(blockId);
     return renderTextTab(blockId);
   }
 
@@ -1643,11 +1689,14 @@ function getDefaultAdminTab() {
   }
 
   function renderVideoCards(videos) {
-    if (!videos.length) {
+    var validVideos = videos.filter(function (video) {
+      return String(video.video_id || "").trim();
+    });
+    if (!validVideos.length) {
       return '<div class="admin-empty">Видео не добавлено</div>';
     }
 
-    return videos.map(function (video) {
+    return validVideos.map(function (video) {
       return [
         '<div class="admin-mini-card">',
         '<p><strong>Видео</strong></p>',
@@ -1659,11 +1708,14 @@ function getDefaultAdminTab() {
   }
 
   function renderFileCards(files) {
-    if (!files.length) {
+    var validFiles = files.filter(function (file) {
+      return String(file.file_id || "").trim();
+    });
+    if (!validFiles.length) {
       return '<div class="admin-empty">Файлы не добавлены</div>';
     }
 
-    return files.map(function (file) {
+    return validFiles.map(function (file) {
       return [
         '<div class="admin-mini-card">',
         '<p><strong>' + escapeHtml(file.file_label || "Без названия") + '</strong></p>',
@@ -3102,7 +3154,9 @@ function getDefaultAdminTab() {
     document.getElementById("blocksList").addEventListener("click", function (event) {
       var editBlockBtn = event.target.closest(".edit-block-btn");
       if (editBlockBtn) {
-        openSectionTab(editBlockBtn.getAttribute("data-block-id"), "text");
+        var blockId = editBlockBtn.getAttribute("data-block-id");
+        var tab = isMixedMaterial(blockId) ? "text" : getMaterialPrimaryType(blockId);
+        openSectionTab(blockId, tab);
         return;
       }
 
