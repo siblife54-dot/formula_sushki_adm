@@ -58,7 +58,38 @@
 
 
 
-  function getDefaultAdminTab() {
+  
+  function getPreviewUrl() {
+    var url = new URL("index.html", window.location.href);
+    url.searchParams.set("preview", "1");
+    var courseId = getActiveCourseId();
+    if (courseId) {
+      url.searchParams.set("course", courseId);
+    }
+    return url.toString();
+  }
+
+  function initPreviewIframe() {
+    var iframe = document.getElementById("previewIframe");
+    if (!iframe) return;
+    iframe.setAttribute("src", getPreviewUrl());
+  }
+
+  function refreshPreview() {
+    var iframe = document.getElementById("previewIframe");
+    if (!iframe) return;
+    try {
+      if (iframe.contentWindow) {
+        iframe.contentWindow.postMessage({ type: "mindcore:refresh-preview" }, "*");
+      }
+    } catch (error) {}
+
+    window.clearTimeout(refreshPreview._fallbackTimer);
+    refreshPreview._fallbackTimer = window.setTimeout(function () {
+      iframe.setAttribute("src", getPreviewUrl() + "&t=" + Date.now());
+    }, 500);
+  }
+function getDefaultAdminTab() {
     try {
       var stored = window.localStorage.getItem("admin_active_tab");
       if (stored === "appearance" || stored === "content" || stored === "connections") {
@@ -823,6 +854,7 @@
     renderThemeCards();
     renderThemePreview(state.selectedThemeId);
     renderThemeDirtyState();
+    refreshPreview();
   }
 
   async function fetchLessons() {
@@ -1173,6 +1205,7 @@
 
     renderBlocksList();
     renderPreview();
+    refreshPreview();
   }
 
   function renderLessonsList() {
@@ -1287,6 +1320,7 @@
 
     renderLessonsList();
     renderEditor();
+    refreshPreview();
     return true;
   }
 
@@ -1315,6 +1349,7 @@
     renderLessonPreviewUploader();
     renderBlocksList();
     renderPreview();
+    refreshPreview();
   }
 
   function renderLessonPreviewUploader() {
@@ -1803,6 +1838,7 @@
     renderLessonsList();
     renderLessonPreviewUploader();
     renderPreview();
+    refreshPreview();
   }
 
   function initQuillForActiveSection(blockId) {
@@ -2133,6 +2169,7 @@
 
     renderLessonsList();
     renderEditor();
+    refreshPreview();
     alert("Урок сохранён");
   }
 
@@ -2398,6 +2435,7 @@
       refreshBlockIndicesInDom();
     }
     renderPreview();
+    refreshPreview();
   }
 
   async function deleteBlock(blockId) {
@@ -2505,6 +2543,7 @@
 
     renderBlocksList();
     renderPreview();
+    refreshPreview();
     alert("Текст секции сохранён");
   }
 
@@ -2534,6 +2573,7 @@
     getItems(blockId).push(result.data);
     renderBlocksList();
     renderPreview();
+    refreshPreview();
     return result.data;
   }
 
@@ -2564,6 +2604,7 @@
     getItems(blockId).push(result.data);
     renderBlocksList();
     renderPreview();
+    refreshPreview();
   }
 
   async function createImageItem(blockId, imageUrl, imageAlt) {
@@ -2593,6 +2634,7 @@
     getItems(blockId).push(result.data);
     renderBlocksList();
     renderPreview();
+    refreshPreview();
     return result.data;
   }
 
@@ -2637,6 +2679,7 @@
 
     renderBlocksList();
     renderPreview();
+    refreshPreview();
   }
 
   async function handleLessonPreviewUpload(event) {
@@ -2655,6 +2698,7 @@
       renderLessonsList();
       renderLessonPreviewUploader();
       renderPreview();
+      refreshPreview();
       alert("Превью урока загружено");
     } catch (error) {
       console.error(error);
@@ -2834,6 +2878,7 @@
         renderThemeCards();
         renderThemePreview(state.selectedThemeId);
         renderThemeDirtyState();
+    refreshPreview();
       });
     }
 
@@ -3300,6 +3345,7 @@
 
     initTooltips();
     bindEvents();
+    initPreviewIframe();
     setActiveAdminTab(getDefaultAdminTab());
     renderConnectionScreen();
     await loadTelegramIntegration();
@@ -3308,6 +3354,7 @@
     renderThemeCards();
     renderThemePreview(state.selectedThemeId);
     renderThemeDirtyState();
+    refreshPreview();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
       if (typeof lesson.preview_image_url === "undefined") {
@@ -3317,6 +3364,7 @@
     });
     renderLessonsList();
     renderPreview();
+    refreshPreview();
 
     if (state.lessons.length) {
       await selectLessonById(state.lessons[0].id);

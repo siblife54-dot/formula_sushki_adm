@@ -28,6 +28,11 @@
     return window.APP_CONFIG || {};
   }
 
+  function isPreviewMode() {
+    var params = new URLSearchParams(window.location.search);
+    return params.get("preview") === "1";
+  }
+
   function getActiveCourseId() {
     var params = new URLSearchParams(window.location.search);
     return params.get("course") || getConfig().courseId;
@@ -1027,5 +1032,13 @@ document.addEventListener("click", function (e) {
   }
 
 });
+
+  window.addEventListener("message", async function (event) {
+    if (!isPreviewMode()) return;
+    if (event && event.data && event.data.type === "mindcore:refresh-preview") {
+      window.location.reload();
+    }
+  });
+
   init();
 })();
