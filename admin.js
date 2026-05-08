@@ -22,8 +22,7 @@
       originalOrder: null,
       dropHappened: false
     },
-    activeAdminTab: "content",
-    activeLessonContentTab: "settings"
+    activeAdminTab: "content"
   };
   state.savedThemeId = "dark_premium";
   var tooltipState = {
@@ -192,7 +191,7 @@
 function getDefaultAdminTab() {
     try {
       var stored = window.localStorage.getItem("admin_active_tab");
-      if (stored === "appearance" || stored === "content" || stored === "connections") {
+      if (stored === "appearance" || stored === "lesson_settings" || stored === "content" || stored === "connections") {
         return stored;
       }
     } catch (error) {}
@@ -200,7 +199,7 @@ function getDefaultAdminTab() {
   }
 
   function setActiveAdminTab(tabId) {
-    var nextTab = (tabId === "content" || tabId === "connections") ? tabId : "appearance";
+    var nextTab = (tabId === "lesson_settings" || tabId === "content" || tabId === "connections") ? tabId : "appearance";
     state.activeAdminTab = nextTab;
 
     document.querySelectorAll(".admin-top-tab").forEach(function (btn) {
@@ -209,9 +208,15 @@ function getDefaultAdminTab() {
     });
 
     document.querySelectorAll(".admin-tab-panel").forEach(function (panel) {
-      var isActive = panel.getAttribute("data-admin-panel") === nextTab;
+      var panelId = panel.getAttribute("data-admin-panel");
+      var isContentPanel = panelId === "content";
+      var isActive = isContentPanel
+        ? (nextTab === "lesson_settings" || nextTab === "content")
+        : panelId === nextTab;
       panel.hidden = !isActive;
     });
+
+    updateLessonEditorPanelsVisibility();
 
     try {
       window.localStorage.setItem("admin_active_tab", nextTab);
@@ -1434,22 +1439,13 @@ function getDefaultAdminTab() {
   }
 
 
-  function setActiveLessonContentTab(tabId) {
-    state.activeLessonContentTab = tabId === "materials" ? "materials" : "settings";
-    renderLessonContentTabs();
-  }
-
-  function renderLessonContentTabs() {
-    var settingsBtn = document.getElementById("lessonSettingsTabBtn");
-    var materialsBtn = document.getElementById("lessonMaterialsTabBtn");
+  function updateLessonEditorPanelsVisibility() {
     var settingsPanel = document.querySelector(".lesson-settings-panel");
     var materialsPanel = document.querySelector(".lesson-materials-panel");
-    var isSettings = state.activeLessonContentTab !== "materials";
+    var isLessonSettings = state.activeAdminTab === "lesson_settings";
 
-    if (settingsBtn) settingsBtn.classList.toggle("is-active", isSettings);
-    if (materialsBtn) materialsBtn.classList.toggle("is-active", !isSettings);
-    if (settingsPanel) settingsPanel.hidden = !isSettings;
-    if (materialsPanel) materialsPanel.hidden = isSettings;
+    if (settingsPanel) settingsPanel.hidden = !isLessonSettings;
+    if (materialsPanel) materialsPanel.hidden = isLessonSettings;
   }
 
   function renderEditor() {
@@ -1473,7 +1469,7 @@ function getDefaultAdminTab() {
     document.getElementById("titleInput").value = lesson.title || "";
     document.getElementById("subtitleInput").value = lesson.subtitle || "";
 
-    renderLessonContentTabs();
+    updateLessonEditorPanelsVisibility();
     renderLessonPreviewUploader();
     renderBlocksList();
     refreshPreviewData();
@@ -3135,12 +3131,6 @@ function getDefaultAdminTab() {
       });
     });
 
-
-    document.querySelectorAll("[data-lesson-content-tab]").forEach(function (button) {
-      button.addEventListener("click", function () {
-        setActiveLessonContentTab(button.getAttribute("data-lesson-content-tab"));
-      });
-    });
 
     document.getElementById("uploadLessonPreviewBtn").addEventListener("click", function () {
       if (!state.selectedLesson) {
