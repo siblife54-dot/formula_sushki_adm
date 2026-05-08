@@ -1048,6 +1048,58 @@ document.addEventListener("click", function (e) {
 
 });
 
+
+  async function refreshPreviewDataWithoutReload() {
+    if (!isPreviewMode()) return;
+
+    var config = getConfig();
+    var page = document.body.getAttribute("data-page");
+
+    try {
+      var themeId = "dark_premium";
+      try {
+        themeId = await fetchCourseThemeId(config);
+      } catch (error) {
+        console.error(error);
+      }
+
+      themeId = getPreviewThemeId() || themeId;
+      applyTheme(config, themeId);
+
+      var lessons = await fetchLessons(config);
+      LAST_LESSONS = lessons.slice();
+
+      if (page === "dashboard") {
+        await renderDashboard(lessons, config);
+        return;
+      }
+
+      if (page === "lesson") {
+        var lessonId = new URLSearchParams(window.location.search).get("id");
+        if (lessonId) {
+          var lessonExists = lessons.some(function (lesson) {
+            return lesson.lesson_id === lessonId;
+          });
+          if (!lessonExists) {
+            var stateBox = document.getElementById("lessonState");
+            var main = document.getElementById("lessonMain");
+            if (main) main.hidden = true;
+            if (stateBox) {
+              stateBox.hidden = false;
+              stateBox.classList.remove("skeleton");
+              stateBox.textContent = "Урок не найден для выбранного курса.";
+            }
+            return;
+          }
+        }
+
+        await renderLesson(lessons);
+      }
+    } catch (error) {
+      console.error("[preview] refresh data failed", error);
+    }
+  }
+
   window.addEventListener("message", async function (event) {
     if (!isPreviewMode()) return;
     if (!event || !event.data) return;
@@ -1060,8 +1112,8 @@ document.addEventListener("click", function (e) {
       return;
     }
 
-    if (event.data.type === "mindcore:refresh-preview") {
-      window.location.reload();
+    if (event.data.type === "mindcore:refresh-preview-data") {
+      await refreshPreviewDataWithoutReload();
     }
   });
 
