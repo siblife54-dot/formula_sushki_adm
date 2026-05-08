@@ -22,8 +22,7 @@
       originalOrder: null,
       dropHappened: false
     },
-    activeAdminTab: "content",
-    activeLessonEditorTab: "main"
+    activeAdminTab: "content"
   };
   state.savedThemeId = "dark_premium";
   var tooltipState = {
@@ -1454,23 +1453,9 @@ function getDefaultAdminTab() {
     document.getElementById("titleInput").value = lesson.title || "";
     document.getElementById("subtitleInput").value = lesson.subtitle || "";
 
-    renderLessonEditorTabs();
     renderLessonPreviewUploader();
     renderBlocksList();
     refreshPreviewData();
-  }
-
-  function renderLessonEditorTabs() {
-    var activeTab = state.activeLessonEditorTab || "main";
-    document.querySelectorAll("[data-lesson-editor-tab]").forEach(function (btn) {
-      var tabId = btn.getAttribute("data-lesson-editor-tab");
-      btn.classList.toggle("active", tabId === activeTab);
-    });
-
-    document.querySelectorAll("[data-lesson-editor-panel]").forEach(function (panel) {
-      var panelId = panel.getAttribute("data-lesson-editor-panel");
-      panel.classList.toggle("active", panelId === activeTab);
-    });
   }
 
   function renderLessonPreviewUploader() {
@@ -1942,7 +1927,6 @@ function getDefaultAdminTab() {
     state.quills = {};
     state.activeSectionId = null;
     state.activeSectionTab = "text";
-    state.activeLessonEditorTab = "main";
 
     state.blocks = await fetchLessonBlocks(lesson.id);
     var blockIds = state.blocks.map(function (block) { return block.id; });
@@ -3115,14 +3099,6 @@ function getDefaultAdminTab() {
 
     document.getElementById("saveLessonBtn").addEventListener("click", function () {
       void saveLesson();
-    });
-    document.querySelectorAll("[data-lesson-editor-tab]").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        var nextTab = btn.getAttribute("data-lesson-editor-tab");
-        if (!nextTab || state.activeLessonEditorTab === nextTab) return;
-        state.activeLessonEditorTab = nextTab;
-        renderLessonEditorTabs();
-      });
     });
 
     document.getElementById("deleteLessonBtn").addEventListener("click", function () {
