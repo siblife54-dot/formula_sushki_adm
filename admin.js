@@ -22,7 +22,8 @@
       originalOrder: null,
       dropHappened: false
     },
-    activeAdminTab: "content"
+    activeAdminTab: "content",
+    activeLessonContentTab: "settings"
   };
   state.savedThemeId = "dark_premium";
   var tooltipState = {
@@ -1432,6 +1433,25 @@ function getDefaultAdminTab() {
     return true;
   }
 
+
+  function setActiveLessonContentTab(tabId) {
+    state.activeLessonContentTab = tabId === "materials" ? "materials" : "settings";
+    renderLessonContentTabs();
+  }
+
+  function renderLessonContentTabs() {
+    var settingsBtn = document.getElementById("lessonSettingsTabBtn");
+    var materialsBtn = document.getElementById("lessonMaterialsTabBtn");
+    var settingsPanel = document.querySelector(".lesson-settings-panel");
+    var materialsPanel = document.querySelector(".lesson-materials-panel");
+    var isSettings = state.activeLessonContentTab !== "materials";
+
+    if (settingsBtn) settingsBtn.classList.toggle("is-active", isSettings);
+    if (materialsBtn) materialsBtn.classList.toggle("is-active", !isSettings);
+    if (settingsPanel) settingsPanel.hidden = !isSettings;
+    if (materialsPanel) materialsPanel.hidden = isSettings;
+  }
+
   function renderEditor() {
     var empty = document.getElementById("editorEmpty");
     var panel = document.getElementById("editorPanel");
@@ -1453,6 +1473,7 @@ function getDefaultAdminTab() {
     document.getElementById("titleInput").value = lesson.title || "";
     document.getElementById("subtitleInput").value = lesson.subtitle || "";
 
+    renderLessonContentTabs();
     renderLessonPreviewUploader();
     renderBlocksList();
     refreshPreviewData();
@@ -3111,6 +3132,13 @@ function getDefaultAdminTab() {
     document.querySelectorAll(".add-material-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
         void createMaterial(btn.getAttribute("data-material-type") || "text");
+      });
+    });
+
+
+    document.querySelectorAll("[data-lesson-content-tab]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        setActiveLessonContentTab(button.getAttribute("data-lesson-content-tab"));
       });
     });
 
