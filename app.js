@@ -38,6 +38,11 @@
     return params.get("course") || getConfig().courseId;
   }
 
+  function getPreviewThemeId() {
+    var params = new URLSearchParams(window.location.search);
+    return normalizeThemeId(params.get("preview_theme"));
+  }
+
   function getIndexUrlWithCourse() {
     var courseId = getActiveCourseId();
     return "./index.html?course=" + encodeURIComponent(courseId);
@@ -981,6 +986,9 @@
     } catch (error) {
       console.error(error);
     }
+    if (isPreviewMode()) {
+      themeId = getPreviewThemeId() || themeId;
+    }
     applyTheme(config, themeId);
     initTelegramViewport();
     await initStorage();
@@ -1035,7 +1043,14 @@ document.addEventListener("click", function (e) {
 
   window.addEventListener("message", async function (event) {
     if (!isPreviewMode()) return;
-    if (event && event.data && event.data.type === "mindcore:refresh-preview") {
+    if (!event || !event.data) return;
+
+    if (event.data.type === "mindcore:preview-theme") {
+      applyTheme(getConfig(), event.data.theme);
+      return;
+    }
+
+    if (event.data.type === "mindcore:refresh-preview") {
       window.location.reload();
     }
   });

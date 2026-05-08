@@ -59,12 +59,16 @@
 
 
   
-  function getPreviewUrl() {
+  function getPreviewUrl(previewThemeId) {
     var url = new URL("index.html", window.location.href);
     url.searchParams.set("preview", "1");
     var courseId = getActiveCourseId();
     if (courseId) {
       url.searchParams.set("course", courseId);
+    }
+    var normalizedPreviewThemeId = normalizeThemeId(previewThemeId);
+    if (normalizedPreviewThemeId) {
+      url.searchParams.set("preview_theme", normalizedPreviewThemeId);
     }
     return url.toString();
   }
@@ -72,7 +76,7 @@
   function initPreviewIframe() {
     var iframe = document.getElementById("previewIframe");
     if (!iframe) return;
-    iframe.setAttribute("src", getPreviewUrl());
+    iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
   }
 
   function refreshPreview() {
@@ -86,7 +90,7 @@
 
     window.clearTimeout(refreshPreview._fallbackTimer);
     refreshPreview._fallbackTimer = window.setTimeout(function () {
-      iframe.setAttribute("src", getPreviewUrl() + "&t=" + Date.now());
+      iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId) + "&t=" + Date.now());
     }, 500);
   }
 function getDefaultAdminTab() {
@@ -721,6 +725,23 @@ function getDefaultAdminTab() {
     return "dark_premium";
   }
 
+
+
+  function applyThemeToLivePreview(themeId) {
+    var iframe = document.getElementById("previewIframe");
+    if (!iframe || !iframe.contentWindow) return;
+
+    var normalizedThemeId = normalizeThemeId(themeId);
+    try {
+      iframe.contentWindow.postMessage({
+        type: "mindcore:preview-theme",
+        theme: normalizedThemeId
+      }, "*");
+    } catch (error) {
+      iframe.setAttribute("src", getPreviewUrl(normalizedThemeId) + "&t=" + Date.now());
+    }
+  }
+
   function renderThemeCards() {
     var container = document.getElementById("themeCards");
     if (!container) return;
@@ -817,6 +838,7 @@ function getDefaultAdminTab() {
     state.savedThemeId = state.selectedThemeId;
     renderThemeCards();
     renderThemeDirtyState();
+    applyThemeToLivePreview(state.selectedThemeId);
     refreshPreview();
   }
 
@@ -2752,8 +2774,8 @@ function getDefaultAdminTab() {
         if (!themeId || themeId === state.selectedThemeId) return;
         state.selectedThemeId = normalizeThemeId(themeId);
         renderThemeCards();
-            renderThemeDirtyState();
-    refreshPreview();
+        renderThemeDirtyState();
+        applyThemeToLivePreview(state.selectedThemeId);
       });
     }
 
