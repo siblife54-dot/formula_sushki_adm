@@ -90,11 +90,12 @@
     iframe.contentWindow.postMessage(message, window.location.origin);
   }
 
-  function applyThemeToPreview(theme) {
-    if (!theme) return;
+  function applyCurrentPreviewTheme() {
+    if (!currentPreviewTheme) return;
+
     sendPreviewMessage({
       type: "mindcore:apply-preview-theme",
-      theme: theme
+      theme: currentPreviewTheme
     });
   }
 
@@ -102,6 +103,9 @@
     sendPreviewMessage({
       type: "mindcore:refresh-preview-data"
     });
+    setTimeout(function () {
+      applyCurrentPreviewTheme();
+    }, 100);
   }
 
   function navigatePreviewToLesson(lessonId) {
@@ -119,9 +123,9 @@
     iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
     if (!isPreviewIframeLoadBound) {
       iframe.addEventListener("load", function () {
-        if (currentPreviewTheme) {
-          applyThemeToPreview(currentPreviewTheme);
-        }
+        setTimeout(function () {
+          applyCurrentPreviewTheme();
+        }, 100);
       });
       isPreviewIframeLoadBound = true;
     }
@@ -768,9 +772,9 @@ function getDefaultAdminTab() {
 
   function applyThemeToLivePreview(theme) {
     currentPreviewTheme = theme || null;
-    if (!theme) return;
-    console.log("[preview] sending theme", theme);
-    applyThemeToPreview(theme);
+    if (!currentPreviewTheme) return;
+    console.log("[preview] sending theme", currentPreviewTheme);
+    applyCurrentPreviewTheme();
   }
 
   function renderThemeCards() {
@@ -872,6 +876,7 @@ function getDefaultAdminTab() {
     renderThemeDirtyState();
     applyThemeToLivePreview(selectedTheme);
     refreshPreviewData();
+    applyCurrentPreviewTheme();
   }
 
   async function fetchLessons() {
@@ -3283,7 +3288,7 @@ function getDefaultAdminTab() {
     currentPreviewTheme = getThemePresetById(state.selectedThemeId);
     renderThemeCards();
     renderThemeDirtyState();
-    applyThemeToPreview(currentPreviewTheme);
+    applyCurrentPreviewTheme();
     refreshPreviewData();
 
     state.lessons = (await fetchLessons()).map(function (lesson) {
