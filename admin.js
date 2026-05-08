@@ -725,21 +725,25 @@ function getDefaultAdminTab() {
     return "dark_premium";
   }
 
-
-
-  function applyThemeToLivePreview(themeId) {
-    var iframe = document.getElementById("previewIframe");
-    if (!iframe || !iframe.contentWindow) return;
-
+  function getThemePresetById(themeId) {
     var normalizedThemeId = normalizeThemeId(themeId);
-    try {
-      iframe.contentWindow.postMessage({
-        type: "mindcore:preview-theme",
-        theme: normalizedThemeId
-      }, "*");
-    } catch (error) {
-      iframe.setAttribute("src", getPreviewUrl(normalizedThemeId) + "&t=" + Date.now());
+    for (var i = 0; i < WEBAPP_THEMES.length; i += 1) {
+      if (WEBAPP_THEMES[i].id === normalizedThemeId) return WEBAPP_THEMES[i];
     }
+    return null;
+  }
+
+  function applyThemeToLivePreview(theme) {
+    var iframe = document.getElementById("previewIframe");
+    if (!iframe || !iframe.contentWindow || !theme) return;
+
+    try {
+      console.log("[preview] sending theme", theme);
+      iframe.contentWindow.postMessage({
+        type: "mindcore:apply-preview-theme",
+        theme: theme
+      }, window.location.origin);
+    } catch (error) {}
   }
 
   function renderThemeCards() {
@@ -838,7 +842,7 @@ function getDefaultAdminTab() {
     state.savedThemeId = state.selectedThemeId;
     renderThemeCards();
     renderThemeDirtyState();
-    applyThemeToLivePreview(state.selectedThemeId);
+    applyThemeToLivePreview(getThemePresetById(state.selectedThemeId));
     refreshPreview();
   }
 
@@ -2775,7 +2779,7 @@ function getDefaultAdminTab() {
         state.selectedThemeId = normalizeThemeId(themeId);
         renderThemeCards();
         renderThemeDirtyState();
-        applyThemeToLivePreview(state.selectedThemeId);
+        applyThemeToLivePreview(getThemePresetById(state.selectedThemeId));
       });
     }
 
