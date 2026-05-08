@@ -872,6 +872,13 @@ body[data-page="admin"] {
   font-size: 24px;
 }
 
+.admin-material-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .admin-blocks-list {
   margin-top: 16px;
   display: grid;

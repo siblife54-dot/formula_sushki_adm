@@ -1473,7 +1473,7 @@ function getDefaultAdminTab() {
         '</div>',
         '<div class="admin-inline-actions">',
         '<button class="admin-btn-ghost block-drag-handle" data-block-id="' + block.id + '" draggable="true" type="button" title="Перетащить материал" aria-label="Перетащить материал">⋮⋮</button>',
-        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + block.id + '" type="button">Открыть</button>',
+        '<button class="admin-btn-ghost edit-block-btn" data-block-id="' + block.id + '" type="button">Редактировать</button>',
         '<button class="admin-btn-ghost duplicate-block-btn" data-block-id="' + block.id + '" type="button" title="Дублировать материал" aria-label="Дублировать материал">⧉</button>',
         '<button class="admin-btn-ghost move-block-btn" data-dir="up" data-block-id="' + block.id + '" type="button">↑</button>',
         '<button class="admin-btn-ghost move-block-btn" data-dir="down" data-block-id="' + block.id + '" type="button">↓</button>',
@@ -2263,8 +2263,11 @@ function getDefaultAdminTab() {
     alert("Урок удалён");
   }
 
-  async function createBlock() {
-    if (!state.selectedLesson) return;
+  async function createMaterial(type) {
+    if (!state.selectedLesson) {
+      alert("Сначала выберите урок");
+      return;
+    }
 
     var client = getClient();
     if (!client) return;
@@ -2291,15 +2294,48 @@ function getDefaultAdminTab() {
       return;
     }
 
-    state.blocks.push(result.data);
+    var createdBlock = result.data;
+    var materialType = ["text", "video", "image", "file"].indexOf(type) >= 0 ? type : "text";
+    var itemPayload = {
+      block_id: createdBlock.id,
+      sort_order: 1,
+      item_type: materialType
+    };
+    if (materialType === "text") itemPayload.text_html = "<p></p>";
+    if (materialType === "video") itemPayload.video_id = null;
+    if (materialType === "file") {
+      itemPayload.file_label = null;
+      itemPayload.file_id = null;
+    }
+    if (materialType === "image") {
+      itemPayload.image_url = null;
+      itemPayload.image_alt = null;
+    }
+
+    var createdItem = null;
+    var itemInsertResult = await client
+      .from("lesson_block_items")
+      .insert(itemPayload)
+      .select()
+      .single();
+
+    if (itemInsertResult.error) {
+      console.warn("Не удалось создать материал сразу, будет создан при сохранении:", itemInsertResult.error);
+    } else {
+      createdItem = itemInsertResult.data;
+    }
+
+    state.blocks.push(createdBlock);
     state.blocks.sort(function (a, b) {
       return (a.sort_order || 0) - (b.sort_order || 0);
     });
-    state.blockItemsByBlockId[String(result.data.id)] = [];
-    state.activeSectionId = null;
-    state.activeSectionTab = "text";
+    state.blockItemsByBlockId[String(createdBlock.id)] = createdItem ? [createdItem] : [];
+    state.activeSectionId = String(createdBlock.id);
+    state.activeSectionTab = materialType;
+    state.quills = {};
 
-    renderEditor();
+    renderBlocksList();
+    refreshPreviewData();
   }
 
   async function swapBlocks(blockId, direction) {
@@ -2441,7 +2477,7 @@ function getDefaultAdminTab() {
     var client = getClient();
     if (!client) return;
 
-    var confirmDelete = window.confirm("Удалить материал и весь его контент?");
+    var confirmDelete = window.confirm("Удалить материал и его содержимое?");
     if (!confirmDelete) return;
 
     var deleteItemsResult = await client
@@ -2542,7 +2578,7 @@ function getDefaultAdminTab() {
 
     renderBlocksList();
     refreshPreviewData();
-    alert("Текст материала сохранён");
+    alert("Текст сохранён");
   }
 
   async function createVideoItem(blockId, videoId) {
@@ -3020,8 +3056,10 @@ function getDefaultAdminTab() {
       });
     });
 
-    document.getElementById("addBlockBtn").addEventListener("click", function () {
-      void createBlock();
+    document.querySelectorAll(".add-material-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        void createMaterial(btn.getAttribute("data-material-type") || "text");
+      });
     });
 
     document.getElementById("uploadLessonPreviewBtn").addEventListener("click", function () {
