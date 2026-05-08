@@ -46,7 +46,7 @@
     business_black: "theme-business-black",
     wow_glass: "theme-wow-glass"
   };
-  var WEBAPP_THEMES = [
+  var WEBAPP_THEMES = Array.isArray(window.APP_THEME_PRESETS) && window.APP_THEME_PRESETS.length ? window.APP_THEME_PRESETS.slice() : [
     { id: "dark_premium", name: "Dark Premium", description: "Тёмно-синий фон с фиолетовым акцентом" },
     { id: "light_clean", name: "Light Clean", description: "Светлый минимализм" },
     { id: "fitness_power", name: "Fitness Power", description: "Тёмный зелёный фитнес-стиль" },
@@ -56,6 +56,7 @@
   ];
   var ACTIVATION_BOT_URL = "https://t.me/mindcore_miniapp_bot?start=activate";
   var currentPreviewTheme = null;
+  var currentPreviewThemeId = null;
   var isPreviewIframeLoadBound = false;
 
 
@@ -79,6 +80,39 @@
     return document.querySelector("#live-preview-iframe")
       || document.querySelector("[data-live-preview-iframe]")
       || document.querySelector("#previewIframe");
+  }
+
+  function getPreviewScreenState() {
+    var iframe = getPreviewIframe();
+    var fallback = { page: "index", lessonId: null };
+    if (!iframe) return fallback;
+    var rawSrc = iframe.getAttribute("src") || "";
+    if (!rawSrc) return fallback;
+    try {
+      var srcUrl = new URL(rawSrc, window.location.href);
+      var isLessonPage = /\/lesson\.html$/i.test(srcUrl.pathname);
+      return { page: isLessonPage ? "lesson" : "index", lessonId: srcUrl.searchParams.get("id") };
+    } catch (error) {
+      return fallback;
+    }
+  }
+
+  function setPreviewIframeUrlForScreen(screenState, previewThemeId) {
+    var iframe = getPreviewIframe();
+    if (!iframe) return;
+    var normalizedPreviewThemeId = normalizeThemeId(previewThemeId || currentPreviewThemeId || state.selectedThemeId);
+    var nextUrl;
+    if (screenState && screenState.page === "lesson" && screenState.lessonId) {
+      nextUrl = new URL("lesson.html", window.location.href);
+      nextUrl.searchParams.set("id", String(screenState.lessonId));
+      nextUrl.searchParams.set("preview", "1");
+      nextUrl.searchParams.set("preview_theme", normalizedPreviewThemeId);
+      var courseId = getActiveCourseId();
+      if (courseId) nextUrl.searchParams.set("course", courseId);
+    } else {
+      nextUrl = new URL(getPreviewUrl(normalizedPreviewThemeId), window.location.href);
+    }
+    iframe.setAttribute("src", nextUrl.toString());
   }
 
   function sendPreviewMessage(message) {
@@ -110,6 +144,7 @@
 
   function navigatePreviewToLesson(lessonId) {
     if (!lessonId) return;
+    setPreviewIframeUrlForScreen({ page: "lesson", lessonId: String(lessonId) }, currentPreviewThemeId || state.selectedThemeId);
     sendPreviewMessage({
       type: "mindcore:navigate-preview",
       target: "lesson",
@@ -120,7 +155,7 @@
   function initPreviewIframe() {
     var iframe = getPreviewIframe();
     if (!iframe) return;
-    iframe.setAttribute("src", getPreviewUrl(state.selectedThemeId));
+    setPreviewIframeUrlForScreen({ page: "index", lessonId: null }, currentPreviewThemeId || state.selectedThemeId);
     if (!isPreviewIframeLoadBound) {
       iframe.addEventListener("load", function () {
         setTimeout(function () {
@@ -871,6 +906,7 @@ function getDefaultAdminTab() {
 
     state.selectedThemeId = normalizeThemeId(result.data && result.data.theme_id);
     state.savedThemeId = state.selectedThemeId;
+    currentPreviewThemeId = state.selectedThemeId;
     var selectedTheme = getThemePresetById(state.selectedThemeId);
     renderThemeCards();
     renderThemeDirtyState();
@@ -2811,8 +2847,10 @@ function getDefaultAdminTab() {
         var themeId = (themeBtn.getAttribute("data-theme-id") || (themeCard && themeCard.getAttribute("data-theme-id")));
         if (!themeId || themeId === state.selectedThemeId) return;
         state.selectedThemeId = normalizeThemeId(themeId);
+        currentPreviewThemeId = state.selectedThemeId;
         renderThemeCards();
         renderThemeDirtyState();
+        setPreviewIframeUrlForScreen(getPreviewScreenState(), currentPreviewThemeId);
         applyThemeToLivePreview(getThemePresetById(state.selectedThemeId));
       });
     }
@@ -3285,7 +3323,9 @@ function getDefaultAdminTab() {
     await loadTelegramIntegration();
     state.selectedThemeId = await fetchCourseThemeId();
     state.savedThemeId = state.selectedThemeId;
+    currentPreviewThemeId = state.selectedThemeId;
     currentPreviewTheme = getThemePresetById(state.selectedThemeId);
+    setPreviewIframeUrlForScreen({ page: "index", lessonId: null }, currentPreviewThemeId);
     renderThemeCards();
     renderThemeDirtyState();
     applyCurrentPreviewTheme();
