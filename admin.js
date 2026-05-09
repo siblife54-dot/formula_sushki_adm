@@ -1182,6 +1182,27 @@ function getDefaultAdminTab() {
       return "https://kinescope.io/embed/" + videoId;
     }
 
+    if ((host === "vkvideo.ru" || host === "www.vkvideo.ru" || host === "vk.com" || host === "www.vk.com") && pathParts[0]) {
+      if (/^video-?\d+_\d+$/i.test(pathParts[0])) {
+        return "https://vk.com/" + pathParts[0];
+      }
+    }
+
+    if ((host === "rutube.ru" || host === "www.rutube.ru") && pathParts[0] === "video" && pathParts[1]) {
+      return "https://rutube.ru/play/embed/" + pathParts[1].replace(/\/$/, "");
+    }
+
+    if (host === "drive.google.com") {
+      var driveMatch = (url.pathname || "").match(/\/file\/d\/([^/]+)/);
+      if (driveMatch && driveMatch[1]) {
+        return "https://drive.google.com/file/d/" + driveMatch[1] + "/preview";
+      }
+    }
+
+    if (host === "disk.yandex.ru" || host === "yadi.sk") {
+      return candidate;
+    }
+
     if (/^https?:\/\//i.test(candidate)) {
       return candidate;
     }
@@ -1633,9 +1654,9 @@ function getDefaultAdminTab() {
         label: "Как добавить видео ?",
         className: "admin-tooltip-trigger--link",
         content: [
-          "1. Загрузите видео на YouTube, Vimeo или Kinescope",
-          "2. Скопируйте ссылку на видео",
-          "3. Вставьте ссылку сюда",
+          "1. Загрузите видео на любую платформу",
+          "2. Скопируйте ссылку",
+          "3. Вставьте её сюда",
           "4. Система сама определит платформу"
         ].join("\n")
       }),
@@ -1645,7 +1666,7 @@ function getDefaultAdminTab() {
       '<label>Ссылка на видео',
       '<input class="video-id-input" data-block-id="' + blockId + '" type="text" placeholder="https://..." />',
       '</label>',
-      '<p class="admin-hint">Поддерживаются YouTube, Vimeo, Kinescope, iframe-код и прямые ссылки.</p>',
+      '<p class="admin-hint">Поддерживаются:<br>YouTube, VK Видео, Vimeo, Kinescope, Rutube, Google Drive, Яндекс Диск.</p>',
       '<button class="btn btn-primary save-video-btn" data-block-id="' + blockId + '" type="button">Сохранить видео</button>',
       '</div>',
       '<div class="admin-mini-cards">',
@@ -3249,7 +3270,7 @@ function getDefaultAdminTab() {
 
         var videoEmbedUrl = parseVideoInputToEmbedUrl(videoValue);
         if (!videoEmbedUrl) {
-          alert("Не удалось определить ссылку на видео. Поддерживаются YouTube, Vimeo и Kinescope.");
+          alert("Не удалось определить ссылку на видео. Поддерживаются YouTube, VK Видео, Vimeo, Kinescope, Rutube, Google Drive, Яндекс Диск.");
           return;
         }
 
