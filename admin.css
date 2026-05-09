@@ -1553,20 +1553,21 @@ body[data-page="admin"] {
 }
 
 .admin-live-preview-header {
-  padding-bottom: 8px;
+  padding: 4px 0 6px;
 }
 
 .admin-live-preview-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
+  gap: 10px;
+  min-height: 28px;
 }
 
 .admin-live-preview-title-row h3 {
   margin: 0;
-  font-size: 16px;
-  line-height: 1.2;
+  font-size: 15px;
+  line-height: 1.15;
 }
 
 .admin-live-preview-subtitle {
