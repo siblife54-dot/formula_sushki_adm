@@ -1347,52 +1347,39 @@ body[data-page="admin"] {
 
 .admin-quill .ql-toolbar.ql-snow button,
 .admin-quill .ql-toolbar.ql-snow .ql-picker-label {
-  color: rgba(255, 255, 255, 0.88);
-}
-
-.admin-quill .ql-toolbar.ql-snow .ql-picker-item {
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--muted);
 }
 
 .admin-quill .ql-toolbar.ql-snow button:hover,
 .admin-quill .ql-toolbar.ql-snow button:focus-visible,
 .admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover,
-.admin-quill .ql-toolbar.ql-snow .ql-picker-item:hover {
-  color: rgba(255, 255, 255, 0.96);
-}
-
 .admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-item:hover,
 .admin-quill .ql-toolbar.ql-snow .ql-picker-item.ql-selected,
 .admin-quill .ql-toolbar.ql-snow button.ql-active {
   color: var(--accent);
 }
 
 .admin-quill .ql-toolbar.ql-snow .ql-stroke {
-  stroke: rgba(255, 255, 255, 0.88);
+  stroke: color-mix(in srgb, var(--muted) 84%, #d7e2ff 16%);
 }
 
 .admin-quill .ql-toolbar.ql-snow .ql-fill {
-  fill: rgba(255, 255, 255, 0.88);
+  fill: color-mix(in srgb, var(--muted) 84%, #d7e2ff 16%);
 }
 
 .admin-quill .ql-toolbar.ql-snow button:hover .ql-stroke,
 .admin-quill .ql-toolbar.ql-snow button:focus-visible .ql-stroke,
-.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke {
-  stroke: rgba(255, 255, 255, 0.96);
-}
-
 .admin-quill .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke,
 .admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-stroke {
   stroke: var(--accent);
 }
 
 .admin-quill .ql-toolbar.ql-snow button:hover .ql-fill,
 .admin-quill .ql-toolbar.ql-snow button:focus-visible .ql-fill,
-.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-fill {
-  fill: rgba(255, 255, 255, 0.96);
-}
-
 .admin-quill .ql-toolbar.ql-snow button.ql-active .ql-fill,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-fill,
 .admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-fill {
   fill: var(--accent);
 }
@@ -1402,7 +1389,7 @@ body[data-page="admin"] {
 }
 
 .admin-quill .ql-toolbar.ql-snow .ql-picker {
-  color: rgba(255, 255, 255, 0.88);
+  color: var(--muted);
 }
 
 .admin-quill .ql-toolbar.ql-snow .ql-picker-options {
