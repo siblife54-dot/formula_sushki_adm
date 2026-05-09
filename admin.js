@@ -1613,11 +1613,20 @@ function getDefaultAdminTab() {
     var data = options || {};
     var label = data.label || "?";
     var extraClass = data.className ? " " + data.className : "";
+    var extraAttrs = "";
+    if (data.extraDataAttrs) {
+      Object.keys(data.extraDataAttrs).forEach(function (key) {
+        var attrValue = data.extraDataAttrs[key];
+        if (attrValue === undefined || attrValue === null || attrValue === false) return;
+        extraAttrs += ' data-' + key + '="' + escapeAttr(String(attrValue)) + '"';
+      });
+    }
     return [
       '<button class="admin-tooltip-trigger' + extraClass + '" type="button"',
       ' aria-label="' + escapeAttr(data.ariaLabel || "Открыть подсказку") + '"',
       ' data-tooltip-title="' + escapeAttr(data.title || "Подсказка") + '"',
       ' data-tooltip-content="' + escapeAttr(data.content || "") + '"',
+      extraAttrs,
       '>' + escapeHtml(label) + '</button>'
     ].join("");
   }
@@ -1639,7 +1648,10 @@ function getDefaultAdminTab() {
           "2. Скопируйте ссылку на видео",
           "3. Вставьте её сюда",
           "4. Система автоматически определит платформу"
-        ].join("\n")
+        ].join("\n"),
+        extraDataAttrs: {
+          "tooltip-kinescope-help": "true"
+        }
       }),
       '</div>',
       '</div>',
@@ -2837,11 +2849,58 @@ function getDefaultAdminTab() {
     popover.setAttribute("role", "tooltip");
     popover.innerHTML = [
       '<p class="admin-tooltip-popover__title"></p>',
-      '<p class="admin-tooltip-popover__body"></p>'
+      '<p class="admin-tooltip-popover__body"></p>',
+      '<button class="admin-tooltip-popover__kinescope-link" type="button" hidden>Как загрузить видео в Kinescope?</button>'
     ].join("");
     document.body.appendChild(popover);
     tooltipState.popover = popover;
     return popover;
+  }
+
+  function ensureKinescopeHelpModal() {
+    var existing = document.getElementById("kinescopeHelpModal");
+    if (existing) return existing;
+    var modal = document.createElement("div");
+    modal.id = "kinescopeHelpModal";
+    modal.className = "admin-kinescope-modal";
+    modal.hidden = true;
+    modal.innerHTML = [
+      '<div class="admin-kinescope-modal__backdrop" data-kinescope-close="true"></div>',
+      '<div class="admin-kinescope-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="kinescopeHelpTitle">',
+      '<h3 id="kinescopeHelpTitle" class="admin-kinescope-modal__title">Kinescope — загрузка видео</h3>',
+      '<ol class="admin-kinescope-modal__list">',
+      '<li>Зарегистрируйтесь в Kinescope</li>',
+      '<li>Нажмите "Загрузить видео"</li>',
+      '<li>Дождитесь обработки видео</li>',
+      '<li>Откройте видео</li>',
+      '<li>Скопируйте ссылку или embed-код</li>',
+      '<li>Вставьте её в WebApp</li>',
+      '</ol>',
+      '<p class="admin-kinescope-modal__note">Kinescope рекомендуется для курсов: без рекламы, защита видео и лучшая работа в Telegram.</p>',
+      '<div class="admin-kinescope-modal__actions"><button class="btn btn-primary" type="button" data-kinescope-close="true">Понятно</button></div>',
+      '</div>'
+    ].join("");
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function openKinescopeHelpModal() {
+    var modal = ensureKinescopeHelpModal();
+    modal.hidden = false;
+    requestAnimationFrame(function () {
+      modal.classList.add("is-open");
+    });
+  }
+
+  function closeKinescopeHelpModal() {
+    var modal = document.getElementById("kinescopeHelpModal");
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    setTimeout(function () {
+      if (!modal.classList.contains("is-open")) {
+        modal.hidden = true;
+      }
+    }, 180);
   }
 
   function positionTooltip(trigger, popover) {
@@ -2893,11 +2952,14 @@ function getDefaultAdminTab() {
     var popover = ensureTooltipPopover();
     var title = trigger.getAttribute("data-tooltip-title") || "Подсказка";
     var content = trigger.getAttribute("data-tooltip-content") || "";
+    var hasKinescopeHelp = trigger.getAttribute("data-tooltip-kinescope-help") === "true";
 
     var titleNode = popover.querySelector(".admin-tooltip-popover__title");
     var bodyNode = popover.querySelector(".admin-tooltip-popover__body");
+    var kinescopeLinkNode = popover.querySelector(".admin-tooltip-popover__kinescope-link");
     if (titleNode) titleNode.textContent = title;
     if (bodyNode) bodyNode.textContent = content;
+    if (kinescopeLinkNode) kinescopeLinkNode.hidden = !hasKinescopeHelp;
 
     popover.hidden = false;
     positionTooltip(trigger, popover);
@@ -2946,6 +3008,19 @@ function getDefaultAdminTab() {
       }
 
       if (tooltipState.popover && event.target.closest(".admin-tooltip-popover")) {
+        var kinescopeHelpLink = event.target.closest(".admin-tooltip-popover__kinescope-link");
+        if (kinescopeHelpLink) {
+          event.preventDefault();
+          event.stopPropagation();
+          openKinescopeHelpModal();
+        }
+        return;
+      }
+
+      var modalClose = event.target.closest("[data-kinescope-close='true']");
+      if (modalClose) {
+        event.preventDefault();
+        closeKinescopeHelpModal();
         return;
       }
 
@@ -2954,6 +3029,7 @@ function getDefaultAdminTab() {
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
+        closeKinescopeHelpModal();
         closeTooltip();
       }
     });
