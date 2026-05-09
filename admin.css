@@ -1468,3 +1468,14 @@ body[data-page="admin"] {
     display: none;
   }
 }
+
+.admin-hint__brand {
+  font-weight: 600;
+  color: color-mix(in srgb, var(--text) 88%, #ffffff 12%);
+}
+
+.admin-hint--kinescope {
+  margin-top: -4px;
+  color: color-mix(in srgb, var(--muted) 94%, #ffffff 6%);
+  line-height: 1.4;
+}
