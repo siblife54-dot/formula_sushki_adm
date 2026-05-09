@@ -194,44 +194,39 @@
       </section>
 
       <section class="admin-tab-panel" data-admin-panel="connections" hidden>
-        <header class="admin-connections-header admin-card">
-          <h2>Подключение WebApp</h2>
-          <p>Подключите курс к Telegram Mini App. VK и MAX появятся позже.</p>
-        </header>
         <div class="admin-connections-grid">
-          <article class="admin-card admin-connection-card admin-connection-card--telegram">
+          <article class="admin-card admin-connection-card">
             <div class="admin-connection-head">
               <h3>Telegram Mini App</h3>
               <span id="telegramConnectionBadge" class="admin-connection-status">Не подключен</span>
             </div>
-            <label class="admin-connection-field">
+            <label class="admin-connection-url">
               Bot Token
               <input id="telegramBotToken" type="password" autocomplete="off" placeholder="123456789:AA..." />
             </label>
             <p class="admin-hint">Токен можно получить в @BotFather. Мы используем его только для подключения кнопки и не сохраняем.</p>
-            <label class="admin-connection-field">
+            <label class="admin-connection-url">
               Название кнопки
               <input id="telegramButtonTitle" type="text" value="Открыть курс" />
             </label>
-            <input id="telegramWebAppUrl" type="hidden" />
             <button id="connectTelegramBtn" class="btn btn-primary" type="button">Подключить Telegram</button>
             <p id="telegramConnectionStatus" class="admin-connection-result" hidden></p>
           </article>
 
-          <article class="admin-card admin-connection-card admin-connection-card--soon" aria-disabled="true">
+          <article class="admin-card admin-connection-card">
             <div class="admin-connection-head">
               <h3>VK Mini App</h3>
               <span class="admin-connection-status">Скоро</span>
             </div>
-            <p class="admin-hint">Подключение будет доступно позже.</p>
+            <p class="admin-hint">Подключение VK Mini App будет доступно позже.</p>
           </article>
 
-          <article class="admin-card admin-connection-card admin-connection-card--soon" aria-disabled="true">
+          <article class="admin-card admin-connection-card">
             <div class="admin-connection-head">
               <h3>MAX Mini App</h3>
               <span class="admin-connection-status">Скоро</span>
             </div>
-            <p class="admin-hint">Подключение будет доступно позже.</p>
+            <p class="admin-hint">Подключение MAX Mini App будет доступно позже.</p>
           </article>
         </div>
       </section>
