@@ -558,6 +558,10 @@
   }
 
   async function renderDashboard(lessons, config) {
+    console.log("[preview access]", {
+      isPreview: isPreviewMode(),
+      url: window.location.href
+    });
     var name = getUserName(APP_PROFILE);
     var avatar = document.getElementById("avatar");
     var studentName = document.getElementById("studentName");
@@ -593,7 +597,7 @@
     list.innerHTML = lessons.map(function (lesson) {
       var done = completed.includes(lesson.lesson_id);
       var accessible = Boolean(accessModel.map[lesson.lesson_id]);
-      var locked = !accessible;
+      var locked = isPreviewMode() ? false : !accessible;
 
       return [
         '<article class="lesson-card' + (locked ? ' locked' : '') + '">',
@@ -814,7 +818,13 @@
 
     var completed = await loadCompleted();
     var accessModel = getAccessibilityModel(lessons, completed);
-    if (!accessModel.map[lesson.lesson_id]) {
+
+    console.log("[preview access]", {
+      isPreview: isPreviewMode(),
+      url: window.location.href
+    });
+
+    if (!isPreviewMode() && !accessModel.map[lesson.lesson_id]) {
       stateBox.classList.remove("skeleton");
       stateBox.textContent = "Этот урок пока недоступен.";
       return;
