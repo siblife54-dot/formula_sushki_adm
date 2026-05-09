@@ -359,6 +359,19 @@
   }
 
   function getAccessibilityModel(lessons, completed) {
+    if (isPreviewMode()) {
+      var map = {};
+      lessons.forEach(function (lesson) {
+        map[lesson.lesson_id] = true;
+      });
+
+      return {
+        maxCompletedDayNumber: lessons.length,
+        threshold: lessons.length,
+        map: map
+      };
+    }
+
     var maxCompletedDayNumber = getMaxCompletedDayNumber(lessons, completed);
     var threshold = maxCompletedDayNumber + 1;
     var map = {};
