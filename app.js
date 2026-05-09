@@ -729,8 +729,19 @@
   function getLessonBlockVideoUrl(value) {
     var raw = String(value || "").trim();
     if (!raw) return "";
-    if (/^https?:\/\//i.test(raw)) return raw;
-    return "https://kinescope.io/embed/" + raw;
+
+    if (!/^https?:\/\//i.test(raw)) {
+      return "https://kinescope.io/embed/" + raw;
+    }
+
+    var normalized = normalizeMediaUrl(raw, "video");
+    if (!normalized) return "";
+
+    if (/disk\.yandex\.ru|yadi\.sk/i.test(normalized)) {
+      return "";
+    }
+
+    return normalized;
   }
 
   // ===== Attachments: parse + tags =====
