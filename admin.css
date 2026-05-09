@@ -821,7 +821,8 @@ body[data-page="admin"] {
 
 .admin-kinescope-modal__dialog {
   position: relative;
-  width: min(500px, calc(100vw - 24px));
+  width: min(680px, calc(100vw - 24px));
+  max-height: 85vh;
   padding: 20px;
   border-radius: 16px;
   border: 1px solid color-mix(in srgb, var(--border) 65%, #dbe6fc 35%);
@@ -831,6 +832,8 @@ body[data-page="admin"] {
   transform: translateY(12px) scale(0.985);
   opacity: 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  display: flex;
+  flex-direction: column;
 }
 
 .admin-kinescope-modal.is-open .admin-kinescope-modal__dialog {
@@ -842,11 +845,50 @@ body[data-page="admin"] {
   margin: 0 0 12px;
 }
 
-.admin-kinescope-modal__list {
+.admin-kinescope-modal__content {
+  overflow-y: auto;
+  padding-right: 6px;
+  margin-right: -2px;
+  scroll-behavior: smooth;
+}
+
+.admin-kinescope-step {
+  margin: 0 0 18px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(214, 230, 255, 0.12);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(5, 10, 20, 0.12));
+}
+
+.admin-kinescope-step:last-of-type {
+  margin-bottom: 12px;
+}
+
+.admin-kinescope-step__text {
   margin: 0;
-  padding-left: 18px;
-  color: #dce8ff;
+  color: #e8f1ff;
   line-height: 1.5;
+  font-size: 14px;
+}
+
+.admin-kinescope-step__text a {
+  color: color-mix(in srgb, var(--accent) 82%, #d4c2ff 18%);
+}
+
+.admin-kinescope-step__subtext {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.admin-kinescope-step__image {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(12, 26, 44, 0.8);
+  background: rgba(8, 14, 26, 0.9);
 }
 
 .admin-kinescope-modal__note {
