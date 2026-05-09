@@ -1311,14 +1311,101 @@ body[data-page="admin"] {
 }
 
 .admin-quill {
-  background: #fff;
+  background: transparent;
   color: #111;
-  border-radius: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
   overflow: hidden;
+}
+
+.admin-quill .ql-toolbar.ql-snow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  padding: 10px 12px;
+  background: color-mix(in srgb, var(--surface) 82%, #0b1528 18%);
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  border-radius: 12px 12px 0 0;
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-formats {
+  margin-right: 0;
+}
+
+.admin-quill .ql-container.ql-snow {
+  border: 0;
+  background: #f9fafc;
+  border-radius: 0 0 12px 12px;
 }
 
 .admin-quill .ql-editor {
   min-height: 220px;
+  color: #182232;
+}
+
+.admin-quill .ql-toolbar.ql-snow button,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label {
+  color: var(--muted);
+}
+
+.admin-quill .ql-toolbar.ql-snow button:hover,
+.admin-quill .ql-toolbar.ql-snow button:focus-visible,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-item:hover,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-item.ql-selected,
+.admin-quill .ql-toolbar.ql-snow button.ql-active {
+  color: var(--accent);
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-stroke {
+  stroke: color-mix(in srgb, var(--muted) 84%, #d7e2ff 16%);
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-fill {
+  fill: color-mix(in srgb, var(--muted) 84%, #d7e2ff 16%);
+}
+
+.admin-quill .ql-toolbar.ql-snow button:hover .ql-stroke,
+.admin-quill .ql-toolbar.ql-snow button:focus-visible .ql-stroke,
+.admin-quill .ql-toolbar.ql-snow button.ql-active .ql-stroke,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-stroke,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-stroke {
+  stroke: var(--accent);
+}
+
+.admin-quill .ql-toolbar.ql-snow button:hover .ql-fill,
+.admin-quill .ql-toolbar.ql-snow button:focus-visible .ql-fill,
+.admin-quill .ql-toolbar.ql-snow button.ql-active .ql-fill,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label:hover .ql-fill,
+.admin-quill .ql-toolbar.ql-snow .ql-picker-label.ql-active .ql-fill {
+  fill: var(--accent);
+}
+
+.admin-quill .ql-toolbar.ql-snow button.ql-disabled {
+  opacity: 0.4;
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-picker {
+  color: var(--muted);
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-picker-options {
+  background: #101a2e;
+  border: 1px solid var(--border);
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-picker.ql-header {
+  min-width: 130px;
+}
+
+.admin-quill .ql-toolbar.ql-snow .ql-picker.ql-header .ql-picker-label {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 4px 28px 4px 10px;
+  background: color-mix(in srgb, var(--surface) 90%, #091123 10%);
 }
 
 .admin-sidebar__add-lesson,
