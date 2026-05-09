@@ -1743,3 +1743,20 @@ body[data-page="admin"] {
   color: color-mix(in srgb, var(--muted) 94%, #ffffff 6%);
   line-height: 1.4;
 }
+
+
+.ql-toolbar button svg {
+  opacity: 1 !important;
+}
+
+.ql-toolbar .ql-stroke {
+  stroke: #ffffff !important;
+}
+
+.ql-toolbar .ql-fill {
+  fill: #ffffff !important;
+}
+
+.ql-toolbar .ql-picker-label {
+  color: #ffffff !important;
+}
