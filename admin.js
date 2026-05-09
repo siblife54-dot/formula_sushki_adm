@@ -27,7 +27,8 @@
   state.savedThemeId = "dark_premium";
   var tooltipState = {
     activeTrigger: null,
-    popover: null
+    popover: null,
+    closeTimer: null
   };
   var ALLOWED_PREVIEW_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
   var MAX_PREVIEW_FILE_SIZE = 5 * 1024 * 1024;
@@ -2910,7 +2911,7 @@ function getDefaultAdminTab() {
     var popoverRect = popover.getBoundingClientRect();
     var viewportWidth = window.innerWidth || document.documentElement.clientWidth;
     var viewportHeight = window.innerHeight || document.documentElement.clientHeight;
-    var gap = 10;
+    var gap = 4;
 
     var left = triggerRect.left + triggerRect.width / 2 - popoverRect.width / 2;
     left = Math.max(8, Math.min(left, viewportWidth - popoverRect.width - 8));
@@ -2927,7 +2928,24 @@ function getDefaultAdminTab() {
     popover.style.top = top + "px";
   }
 
+
+
+  function cancelTooltipClose() {
+    if (!tooltipState.closeTimer) return;
+    clearTimeout(tooltipState.closeTimer);
+    tooltipState.closeTimer = null;
+  }
+
+  function scheduleTooltipClose() {
+    cancelTooltipClose();
+    tooltipState.closeTimer = setTimeout(function () {
+      closeTooltip();
+    }, 200);
+  }
+
   function closeTooltip() {
+    cancelTooltipClose();
+
     var popover = tooltipState.popover;
     var trigger = tooltipState.activeTrigger;
 
@@ -2945,6 +2963,7 @@ function getDefaultAdminTab() {
 
   function openTooltip(trigger) {
     if (!trigger) return;
+    cancelTooltipClose();
     if (tooltipState.activeTrigger && tooltipState.activeTrigger !== trigger) {
       closeTooltip();
     }
@@ -2990,7 +3009,28 @@ function getDefaultAdminTab() {
       if (related && (trigger.contains(related) || (popover && popover.contains(related)))) {
         return;
       }
-      closeTooltip();
+      scheduleTooltipClose();
+    });
+
+    document.addEventListener("mouseover", function (event) {
+      if (isTouchTooltipMode()) return;
+      var popover = tooltipState.popover;
+      if (popover && event.target.closest(".admin-tooltip-popover")) {
+        cancelTooltipClose();
+      }
+    });
+
+    document.addEventListener("mouseout", function (event) {
+      if (isTouchTooltipMode()) return;
+      var popover = tooltipState.popover;
+      if (!popover || !event.target.closest(".admin-tooltip-popover")) return;
+
+      var related = event.relatedTarget;
+      var trigger = tooltipState.activeTrigger;
+      if (related && ((trigger && trigger.contains(related)) || popover.contains(related))) {
+        return;
+      }
+      scheduleTooltipClose();
     });
 
     document.addEventListener("click", function (event) {
