@@ -236,14 +236,20 @@
         <div class="admin-card__header admin-card__header--compact">
           <div>
             <p class="admin-card__eyebrow">Предпросмотр</p>
-            <h3>Live WebApp</h3>
+            <h3>Предпросмотр</h3>
+            <p class="admin-live-preview-subtitle">Так ученики увидят ваш курс</p>
           </div>
+          <span class="admin-live-preview-status" aria-label="Live preview active">
+            <i aria-hidden="true"></i>Live
+          </span>
         </div>
-        <div class="admin-live-preview-phone">
+        <div class="admin-live-preview-shell">
+          <div class="admin-live-preview-phone">
           <div class="admin-live-preview-notch"></div>
           <div class="admin-live-preview-screen-wrap">
             <iframe id="previewIframe" class="admin-live-preview-iframe" title="Live preview" loading="lazy"></iframe>
           </div>
+        </div>
         </div>
       </div>
     </aside>
