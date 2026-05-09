@@ -1549,13 +1549,30 @@ body[data-page="admin"] {
 
 .admin-live-preview-card {
   position: sticky;
-  top: 18px;
+  top: 14px;
+}
+
+.admin-live-preview-header {
+  padding-bottom: 10px;
+}
+
+.admin-live-preview-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.admin-live-preview-title-row h3 {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.2;
 }
 
 .admin-live-preview-subtitle {
-  margin: 6px 0 0;
-  font-size: 12px;
-  color: color-mix(in srgb, var(--muted) 86%, #dbeafe 14%);
+  margin: 4px 0 0;
+  font-size: 11px;
+  color: color-mix(in srgb, var(--muted) 88%, #dbeafe 12%);
 }
 
 .admin-live-preview-status {
@@ -1582,43 +1599,34 @@ body[data-page="admin"] {
 }
 
 .admin-live-preview-shell {
-  margin-top: 14px;
-  border-radius: 30px;
-  padding: 16px;
-  border: 1px solid rgba(148, 163, 184, 0.22);
-  background:
-    radial-gradient(110% 90% at 18% 10%, rgba(96,165,250,0.14) 0%, rgba(96,165,250,0) 52%),
-    radial-gradient(110% 90% at 82% 94%, rgba(129,140,248,0.11) 0%, rgba(129,140,248,0) 55%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.88) 0%, rgba(2, 8, 23, 0.72) 100%);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 16px 34px rgba(2, 6, 23, 0.36);
+  margin-top: 8px;
   display: flex;
-  justify-content: center;
 }
 
 .admin-live-preview-phone {
-  width: min(100%, 290px);
-  border-radius: 34px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: linear-gradient(180deg, #18263a 0%, #0d1727 30%, #070e1a 100%);
-  box-shadow: 0 14px 30px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.22);
-  padding: 12px 10px 10px;
+  width: 100%;
+  border-radius: 36px;
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  background: linear-gradient(180deg, rgba(12, 20, 33, 0.95), rgba(6, 12, 22, 0.96));
+  box-shadow: 0 14px 30px rgba(0,0,0,0.32);
+  padding: 8px;
   position: relative;
 }
 
 .admin-live-preview-notch {
-  width: 29%;
-  height: 12px;
-  border-radius: 0 0 10px 10px;
-  background: linear-gradient(180deg, #070b12 0%, #151c28 100%);
-  margin: 0 auto 8px;
+  width: 22%;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.35);
+  margin: 3px auto 6px;
 }
 
 .admin-live-preview-screen-wrap {
-  border-radius: 25px;
+  border-radius: 30px;
   overflow: hidden;
   background: #000;
-  aspect-ratio: 9 / 19.5;
-  border: 1px solid rgba(255,255,255,0.07);
+  aspect-ratio: 9 / 18.8;
+  min-height: min(78vh, 760px);
 }
 
 .admin-live-preview-iframe {
