@@ -1336,13 +1336,14 @@ body[data-page="admin"] {
 
 .admin-quill .ql-container.ql-snow {
   border: 0;
-  background: #f9fafc;
+  background: #ffffff !important;
   border-radius: 0 0 12px 12px;
 }
 
 .admin-quill .ql-editor {
   min-height: 220px;
-  color: #182232;
+  background: #ffffff !important;
+  color: #111111 !important;
 }
 
 .admin-quill .ql-toolbar.ql-snow button,
