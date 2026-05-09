@@ -649,20 +649,6 @@
     document.getElementById("progressFill").style.width = pct + "%";
   }
 
-  function extractYouTubeId(url) {
-    if (!url) return null;
-    var re = /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&?/]+)/;
-    var match = url.match(re);
-    return match ? match[1] : null;
-  }
-
-  function isYandexUrl(url) {
-    return /(?:disk\.yandex\.ru|yadi\.sk)/i.test(url || "");
-  }
-
-  function isYandexEmbedUrl(url) {
-    return /(?:embed|iframe|video-player|\/i\/)/i.test(url || "");
-  }
 
   function extractDriveFileId(url) {
     if (!url) return null;
@@ -697,14 +683,6 @@
       return value;
     }
 
-    if (isYandexUrl(value)) {
-      return value;
-    }
-
-    if (type === "video") {
-      var youtubeId = extractYouTubeId(value);
-      if (youtubeId) return "https://www.youtube.com/embed/" + youtubeId;
-    }
 
     return value;
   }
@@ -715,9 +693,6 @@
       return { mode: "none", url: "" };
     }
 
-    if (isYandexUrl(normalized) && !isYandexEmbedUrl(normalized)) {
-      return { mode: "link", url: normalized };
-    }
 
     if (/^https:\/\//i.test(normalized)) {
       return { mode: "embed", url: normalized };
@@ -736,10 +711,6 @@
 
     var normalized = normalizeMediaUrl(raw, "video");
     if (!normalized) return "";
-
-    if (/disk\.yandex\.ru|yadi\.sk/i.test(normalized)) {
-      return "";
-    }
 
     return normalized;
   }

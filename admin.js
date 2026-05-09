@@ -1132,15 +1132,15 @@ function getDefaultAdminTab() {
 
   function parseVideoInputToEmbedUrl(value) {
     var input = String(value || "").trim();
-    if (!input) return null;
+    if (!input) return { embedUrl: null, error: "invalid" };
 
     var srcMatch = input.match(/<iframe[\s\S]*?\ssrc\s*=\s*["']([^"']+)["']/i);
     var candidate = srcMatch && srcMatch[1] ? srcMatch[1].trim() : input;
-    if (!candidate) return null;
+    if (!candidate) return { embedUrl: null, error: "invalid" };
 
     var kinescopeIdPattern = /^[A-Za-z0-9_-]{6,}$/;
     if (kinescopeIdPattern.test(candidate) && candidate.indexOf("http") !== 0) {
-      return "https://kinescope.io/embed/" + candidate;
+      return { embedUrl: "https://kinescope.io/embed/" + candidate, error: null };
     }
 
     if (candidate.indexOf("//") === 0) {
@@ -1151,64 +1151,45 @@ function getDefaultAdminTab() {
     try {
       url = new URL(candidate);
     } catch (error) {
-      return null;
+      return { embedUrl: null, error: "invalid" };
     }
 
     var host = (url.hostname || "").toLowerCase();
     var pathParts = (url.pathname || "").split("/").filter(Boolean);
 
-    if (host === "youtu.be" && pathParts[0]) {
-      return "https://www.youtube.com/embed/" + pathParts[0];
-    }
-
-    if (host === "youtube.com" || host === "www.youtube.com") {
-      var youtubeId = url.searchParams.get("v");
-      if (!youtubeId && pathParts[0] === "embed" && pathParts[1]) youtubeId = pathParts[1];
-      if (youtubeId) return "https://www.youtube.com/embed/" + youtubeId;
+    if ((host === "youtube.com" || host === "www.youtube.com" || host === "youtu.be" || host === "vkvideo.ru" || host === "www.vkvideo.ru" || host === "vk.com" || host === "www.vk.com" || host === "disk.yandex.ru" || host === "yadi.sk")) {
+      return { embedUrl: null, error: "unsupported" };
     }
 
     if ((host === "vimeo.com" || host === "www.vimeo.com") && pathParts[0]) {
-      return "https://player.vimeo.com/video/" + pathParts[0];
+      return { embedUrl: "https://player.vimeo.com/video/" + pathParts[0], error: null };
     }
 
     if ((host === "player.vimeo.com") && pathParts[0] === "video" && pathParts[1]) {
-      return "https://player.vimeo.com/video/" + pathParts[1];
+      return { embedUrl: "https://player.vimeo.com/video/" + pathParts[1], error: null };
     }
 
     if (host === "kinescope.io" || host === "www.kinescope.io") {
-      if (!pathParts.length) return null;
+      if (!pathParts.length) return { embedUrl: null, error: "invalid" };
       var videoId = pathParts[0] === "embed" ? pathParts[1] : pathParts[0];
-      if (!videoId || !kinescopeIdPattern.test(videoId)) return null;
-      return "https://kinescope.io/embed/" + videoId;
-    }
-
-    if ((host === "vkvideo.ru" || host === "www.vkvideo.ru" || host === "vk.com" || host === "www.vk.com") && pathParts[0]) {
-      if (/^video-?\d+_\d+$/i.test(pathParts[0])) {
-        return "https://vk.com/" + pathParts[0];
-      }
+      if (!videoId || !kinescopeIdPattern.test(videoId)) return { embedUrl: null, error: "invalid" };
+      return { embedUrl: "https://kinescope.io/embed/" + videoId, error: null };
     }
 
     if ((host === "rutube.ru" || host === "www.rutube.ru") && pathParts[0] === "video" && pathParts[1]) {
-      return "https://rutube.ru/play/embed/" + pathParts[1].replace(/\/$/, "");
+      return { embedUrl: "https://rutube.ru/play/embed/" + pathParts[1].replace(/\/$/, ""), error: null };
     }
 
     if (host === "drive.google.com") {
       var driveMatch = (url.pathname || "").match(/\/file\/d\/([^/]+)/);
       if (driveMatch && driveMatch[1]) {
-        return "https://drive.google.com/file/d/" + driveMatch[1] + "/preview";
+        return { embedUrl: "https://drive.google.com/file/d/" + driveMatch[1] + "/preview", error: null };
       }
     }
 
-    if (host === "disk.yandex.ru" || host === "yadi.sk") {
-      return candidate;
-    }
-
-    if (/^https?:\/\//i.test(candidate)) {
-      return candidate;
-    }
-
-    return null;
+    return { embedUrl: null, error: "invalid" };
   }
+
 
   function getSectionSummary(blockId) {
     var textItem = getTextItem(blockId);
@@ -1654,10 +1635,10 @@ function getDefaultAdminTab() {
         label: "Как добавить видео ?",
         className: "admin-tooltip-trigger--link",
         content: [
-          "1. Загрузите видео на любую платформу",
-          "2. Скопируйте ссылку",
+          "1. Загрузите видео на одну из поддерживаемых платформ",
+          "2. Скопируйте ссылку на видео",
           "3. Вставьте её сюда",
-          "4. Система сама определит платформу"
+          "4. Система автоматически определит платформу"
         ].join("\n")
       }),
       '</div>',
@@ -1666,7 +1647,7 @@ function getDefaultAdminTab() {
       '<label>Ссылка на видео',
       '<input class="video-id-input" data-block-id="' + blockId + '" type="text" placeholder="https://..." />',
       '</label>',
-      '<p class="admin-hint">Поддерживаются:<br>YouTube, VK Видео, Vimeo, Kinescope, Rutube, Google Drive, Яндекс Диск.</p>',
+      '<p class="admin-hint">Поддерживаются:<br>Kinescope, Vimeo, Rutube и Google Drive.</p>',
       '<button class="btn btn-primary save-video-btn" data-block-id="' + blockId + '" type="button">Сохранить видео</button>',
       '</div>',
       '<div class="admin-mini-cards">',
@@ -3268,13 +3249,17 @@ function getDefaultAdminTab() {
           return;
         }
 
-        var videoEmbedUrl = parseVideoInputToEmbedUrl(videoValue);
-        if (!videoEmbedUrl) {
-          alert("Не удалось определить ссылку на видео. Поддерживаются YouTube, VK Видео, Vimeo, Kinescope, Rutube, Google Drive, Яндекс Диск.");
+        var videoParseResult = parseVideoInputToEmbedUrl(videoValue);
+        if (!videoParseResult.embedUrl) {
+          if (videoParseResult.error === "unsupported") {
+            alert("Эта видео-платформа сейчас не поддерживается.");
+            return;
+          }
+          alert("Не удалось определить ссылку на видео. Поддерживаются Kinescope, Vimeo, Rutube и Google Drive.");
           return;
         }
 
-        void createVideoItem(videoBlockId, videoEmbedUrl).then(function (createdItem) {
+        void createVideoItem(videoBlockId, videoParseResult.embedUrl).then(function (createdItem) {
           if (!createdItem) return;
           videoInput.value = "";
         });
