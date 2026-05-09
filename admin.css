@@ -755,7 +755,7 @@ body[data-page="admin"] {
   color: #e6f0ff;
   opacity: 0;
   pointer-events: none;
-  transform: translateY(8px);
+  transform: translateY(4px);
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
