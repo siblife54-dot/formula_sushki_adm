@@ -1553,21 +1553,30 @@ body[data-page="admin"] {
 }
 
 .admin-live-preview-header {
-  padding: 4px 0 6px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 88px;
+  padding: 24px 28px;
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 82%, rgba(219, 234, 254, 0.16) 18%);
 }
 
 .admin-live-preview-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
-  min-height: 28px;
+  width: 100%;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
 }
 
 .admin-live-preview-title-row h3 {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.15;
+  padding: 0;
+  font-size: clamp(24px, 2vw, 28px);
+  font-weight: 700;
+  line-height: 1;
 }
 
 .admin-live-preview-subtitle {
@@ -1579,12 +1588,15 @@ body[data-page="admin"] {
 .admin-live-preview-status {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 6px;
-  font-size: 11px;
+  margin: 0;
+  font-size: 10px;
   font-weight: 600;
   letter-spacing: .01em;
+  line-height: 1;
   color: #d4ffe8;
-  padding: 5px 9px;
+  padding: 5px 10px;
   border-radius: 999px;
   border: 1px solid rgba(88, 255, 168, 0.28);
   background: rgba(9, 31, 22, 0.58);
