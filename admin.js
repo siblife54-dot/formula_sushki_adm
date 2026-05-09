@@ -626,7 +626,7 @@ function getDefaultAdminTab() {
       .insert({
         lesson_id: "lesson_" + Date.now(),
         course_id: actualCourseId,
-        title: "Новый урок",
+        title: "Новый модуль",
         subtitle: "",
         day_number: 1
       });
@@ -1506,7 +1506,7 @@ function getDefaultAdminTab() {
       return;
     }
 
-    previewBox.innerHTML = '<img src="' + escapeAttr(state.selectedLesson.preview_image_url) + '" alt="Превью урока">';
+    previewBox.innerHTML = '<img src="' + escapeAttr(state.selectedLesson.preview_image_url) + '" alt="Превью модуля">';
     removeBtn.hidden = false;
   }
 
@@ -2208,7 +2208,7 @@ function getDefaultAdminTab() {
         lesson_id: generateLessonId(),
         day_number: nextDay,
         lesson_label: "",
-        title: "Новый урок",
+        title: "Новый модуль",
         subtitle: "",
         preview_image_url: null
       })
@@ -2281,7 +2281,7 @@ function getDefaultAdminTab() {
 
     var lessonToDelete = state.selectedLesson;
     var confirmed = window.confirm(
-      "Удалить урок полностью? Будут удалены все материалы, текст, видео и файлы этого урока. Это действие нельзя отменить."
+      "Удалить модуль полностью? Будут удалены все материалы, текст, видео и файлы этого модуля. Это действие нельзя отменить."
     );
     if (!confirmed) return;
 
@@ -2828,7 +2828,7 @@ function getDefaultAdminTab() {
       renderLessonsList();
       renderLessonPreviewUploader();
         refreshPreviewData();
-      alert("Превью урока загружено");
+      alert("Превью модуля загружено");
     } catch (error) {
       console.error(error);
       alert(error && error.message ? error.message : "Не удалось загрузить превью");

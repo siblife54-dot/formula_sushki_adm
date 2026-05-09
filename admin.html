@@ -50,7 +50,7 @@
           <h1>Админ-панель</h1>
           <p id="adminCourseLabel">Загрузка...</p>
         </div>
-        <button id="addLessonBtn" class="btn btn-primary admin-sidebar__add-lesson" type="button">+ Новый урок</button>
+        <button id="addLessonBtn" class="btn btn-primary admin-sidebar__add-lesson" type="button">+ Новый модуль</button>
       </div>
 
       <div id="lessonsList" class="admin-lessons-list"></div>
@@ -63,7 +63,7 @@
       </div>
       <nav class="admin-top-tabs" aria-label="Разделы админки">
         <button class="admin-top-tab is-active" type="button" data-admin-tab="appearance">Внешний вид</button>
-        <button class="admin-top-tab" type="button" data-admin-tab="lesson_settings">Настройки урока</button>
+        <button class="admin-top-tab" type="button" data-admin-tab="lesson_settings">Настройки модуля</button>
         <button class="admin-top-tab" type="button" data-admin-tab="content">Наполнение</button>
         <button class="admin-top-tab" type="button" data-admin-tab="connections">Подключение</button>
       </nav>
@@ -92,19 +92,19 @@
           <section class="admin-card admin-lesson-card lesson-settings-panel">
             <div class="admin-card__header">
               <div>
-                <p class="admin-card__eyebrow">Редактор урока</p>
+                <p class="admin-card__eyebrow">Редактор модуля</p>
                 <h2 id="editorLessonTitle">Урок</h2>
               </div>
               <div class="admin-lesson-actions">
-                <button id="deleteLessonBtn" class="btn btn-danger-outline" type="button">Удалить урок</button>
-                <button id="saveLessonBtn" class="btn btn-primary" type="button">Сохранить урок</button>
+                <button id="deleteLessonBtn" class="btn btn-danger-outline" type="button">Удалить модуль</button>
+                <button id="saveLessonBtn" class="btn btn-primary" type="button">Сохранить модуль</button>
               </div>
             </div>
 
             <div class="admin-form admin-form--lesson">
               <label>
-                Название урока
-                <input id="titleInput" type="text" placeholder="Введите название урока" />
+                Название модуля
+                <input id="titleInput" type="text" placeholder="Введите название модуля" />
               </label>
 
               <label>
@@ -135,7 +135,7 @@
 
               <label>
                 <span class="admin-label-title">
-                  <span>Метка урока</span>
+                  <span>Метка модуля</span>
                   <button
                     class="admin-tooltip-trigger"
                     type="button"
@@ -159,7 +159,7 @@
 
             <section class="admin-lesson-preview-uploader">
               <div class="admin-lesson-preview-uploader__header">
-                <h3>Превью урока</h3>
+                <h3>Превью модуля</h3>
               </div>
               <div id="lessonPreviewBox" class="admin-lesson-preview-box"></div>
               <p class="admin-hint admin-lesson-preview-uploader__hint">
@@ -177,7 +177,7 @@
 
           <section class="admin-blocks lesson-materials-panel">
             <div class="admin-blocks-header">
-              <h3>Материалы урока</h3>
+              <h3>Материалы модуля</h3>
               <div class="admin-material-actions">
                 <button class="btn btn-primary add-material-btn" data-material-type="text" type="button">+ Текст</button>
                 <button class="btn btn-primary add-material-btn" data-material-type="video" type="button">+ Видео</button>
