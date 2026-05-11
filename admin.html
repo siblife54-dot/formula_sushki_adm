@@ -251,6 +251,24 @@
     </aside>
   </div>
 
+
+  <button id="mobilePreviewToggleBtn" class="admin-mobile-preview-fab" type="button" aria-haspopup="dialog" aria-controls="mobilePreviewModal" aria-expanded="false">
+    👁 Предпросмотр
+  </button>
+
+  <div id="mobilePreviewModal" class="admin-mobile-preview-modal" hidden>
+    <div class="admin-mobile-preview-modal__overlay" data-mobile-preview-close="true"></div>
+    <section class="admin-mobile-preview-modal__sheet" role="dialog" aria-modal="true" aria-label="Предпросмотр">
+      <header class="admin-mobile-preview-modal__header">
+        <h3>Предпросмотр</h3>
+        <button id="mobilePreviewCloseBtn" class="admin-btn-ghost" type="button" data-mobile-preview-close="true">Закрыть</button>
+      </header>
+      <div class="admin-mobile-preview-modal__frame-wrap">
+        <iframe id="mobilePreviewIframe" class="admin-mobile-preview-iframe" title="Mobile live preview" loading="lazy"></iframe>
+      </div>
+    </section>
+  </div>
+
   <script src="config.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase.js"></script>

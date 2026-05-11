@@ -62,7 +62,26 @@
   var currentPreviewTheme = null;
   var currentPreviewThemeId = null;
   var isPreviewIframeLoadBound = false;
+  var isMobilePreviewLoadBound = false;
 
+  function isMobileViewport() {
+    return window.matchMedia && window.matchMedia("(max-width: 768px)").matches;
+  }
+
+  function isMobilePreviewOpen() {
+    var modal = document.getElementById("mobilePreviewModal");
+    return Boolean(modal && !modal.hidden && modal.classList.contains("is-open"));
+  }
+
+  function getDesktopPreviewIframe() {
+    return document.querySelector("#live-preview-iframe")
+      || document.querySelector("[data-live-preview-iframe]")
+      || document.querySelector("#previewIframe");
+  }
+
+  function getMobilePreviewIframe() {
+    return document.getElementById("mobilePreviewIframe");
+  }
 
 
   
@@ -81,9 +100,10 @@
   }
 
   function getPreviewIframe() {
-    return document.querySelector("#live-preview-iframe")
-      || document.querySelector("[data-live-preview-iframe]")
-      || document.querySelector("#previewIframe");
+    if (isMobileViewport() && isMobilePreviewOpen()) {
+      return getMobilePreviewIframe() || getDesktopPreviewIframe();
+    }
+    return getDesktopPreviewIframe();
   }
 
   function getPreviewScreenState() {
@@ -192,6 +212,46 @@
       isPreviewIframeLoadBound = true;
     }
   }
+
+  function openMobilePreviewModal() {
+    if (!isMobileViewport()) return;
+    var modal = document.getElementById("mobilePreviewModal");
+    var button = document.getElementById("mobilePreviewToggleBtn");
+    var mobileIframe = getMobilePreviewIframe();
+    var desktopIframe = getDesktopPreviewIframe();
+    if (!modal || !button || !mobileIframe || !desktopIframe) return;
+
+    var src = desktopIframe.getAttribute("src") || desktopIframe.src || getPreviewUrl(currentPreviewThemeId || state.selectedThemeId);
+    if (src) mobileIframe.setAttribute("src", src);
+
+    modal.hidden = false;
+    modal.classList.add("is-open");
+    button.setAttribute("aria-expanded", "true");
+    document.body.classList.add("is-mobile-preview-open");
+
+    setTimeout(function () {
+      applyCurrentPreviewTheme();
+    }, 80);
+
+    if (!isMobilePreviewLoadBound) {
+      mobileIframe.addEventListener("load", function () {
+        applyCurrentPreviewTheme();
+      });
+      isMobilePreviewLoadBound = true;
+    }
+  }
+
+  function closeMobilePreviewModal() {
+    var modal = document.getElementById("mobilePreviewModal");
+    var button = document.getElementById("mobilePreviewToggleBtn");
+    if (!modal || modal.hidden) return;
+
+    modal.classList.remove("is-open");
+    modal.hidden = true;
+    if (button) button.setAttribute("aria-expanded", "false");
+    document.body.classList.remove("is-mobile-preview-open");
+  }
+
 function getDefaultAdminTab() {
     try {
       var stored = window.localStorage.getItem("admin_active_tab");
@@ -205,6 +265,19 @@ function getDefaultAdminTab() {
   function setActiveAdminTab(tabId) {
     var nextTab = (tabId === "lesson_settings" || tabId === "content" || tabId === "connections") ? tabId : "appearance";
     state.activeAdminTab = nextTab;
+
+    var mobilePreviewToggleBtn = document.getElementById("mobilePreviewToggleBtn");
+    if (mobilePreviewToggleBtn) {
+      mobilePreviewToggleBtn.addEventListener("click", function () {
+        openMobilePreviewModal();
+      });
+    }
+
+    document.querySelectorAll("[data-mobile-preview-close=\"true\"]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeMobilePreviewModal();
+      });
+    });
 
     document.querySelectorAll(".admin-top-tab").forEach(function (btn) {
       var isActive = btn.getAttribute("data-admin-tab") === nextTab;
@@ -3203,6 +3276,7 @@ function getDefaultAdminTab() {
       if (event.key === "Escape") {
         closeKinescopeHelpModal();
         closeTelegramBotHelpModal();
+        closeMobilePreviewModal();
         closeTooltip();
       }
     });
@@ -3219,6 +3293,19 @@ function getDefaultAdminTab() {
   }
 
   function bindEvents() {
+    var mobilePreviewToggleBtn = document.getElementById("mobilePreviewToggleBtn");
+    if (mobilePreviewToggleBtn) {
+      mobilePreviewToggleBtn.addEventListener("click", function () {
+        openMobilePreviewModal();
+      });
+    }
+
+    document.querySelectorAll("[data-mobile-preview-close=\"true\"]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        closeMobilePreviewModal();
+      });
+    });
+
     document.querySelectorAll(".admin-top-tab").forEach(function (btn) {
       btn.addEventListener("click", function () {
         setActiveAdminTab(btn.getAttribute("data-admin-tab"));
