@@ -1811,6 +1811,166 @@ body[data-page="admin"] {
   .admin-top-tabs { padding: 8px; }
 }
 
+@media (max-width: 768px) {
+  body[data-page="admin"] {
+    overflow-x: hidden;
+  }
+
+  .admin-layout {
+    display: block;
+    min-height: auto;
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    max-width: none;
+    position: static;
+    height: auto;
+    padding: 0 12px 14px;
+  }
+
+  .admin-sidebar__header-glass {
+    margin: 0 -12px;
+    padding: 12px;
+  }
+
+  .admin-sidebar__top h1 {
+    font-size: 20px;
+  }
+
+  .admin-sidebar__top p {
+    font-size: 12px;
+  }
+
+  .admin-lessons-list {
+    max-height: 260px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .admin-lesson-item {
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  .admin-main {
+    width: 100%;
+    min-width: 0;
+    padding: 16px 12px 24px;
+  }
+
+  .admin-card {
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  .admin-card__header {
+    margin: -16px -16px 12px;
+    padding: 12px 14px;
+    border-radius: 16px 16px 12px 12px;
+  }
+
+  .admin-top-tabs {
+    gap: 8px;
+    overflow-x: auto;
+    white-space: nowrap;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .admin-top-tabs::-webkit-scrollbar,
+  .admin-inner-tabs::-webkit-scrollbar,
+  .admin-tabs::-webkit-scrollbar,
+  .admin-quill .ql-toolbar.ql-snow::-webkit-scrollbar {
+    display: none;
+  }
+
+  .admin-inner-tabs,
+  .admin-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .admin-form--lesson,
+  .admin-connections-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-panel-actions,
+  .admin-lesson-actions,
+  .admin-material-actions,
+  .admin-inline-actions,
+  .admin-lesson-preview-uploader__actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .admin-material-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-material-actions .btn,
+  .admin-lesson-actions .btn,
+  .admin-panel-actions .btn,
+  .admin-inline-actions .btn,
+  .admin-inline-actions .admin-btn-ghost {
+    width: 100%;
+  }
+
+  .admin-block-item,
+  .admin-mini-card,
+  .admin-connection-card,
+  .admin-tab-panel {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .admin-block-head,
+  .admin-blocks-header {
+    gap: 10px;
+  }
+
+  .admin-quill .ql-toolbar.ql-snow {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .admin-quill .ql-container.ql-snow {
+    width: 100%;
+  }
+
+  .admin-quill .ql-editor {
+    min-height: 160px;
+  }
+
+  .admin-telegram-help-modal__dialog,
+  .admin-kinescope-modal__dialog {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    max-height: 85vh;
+    overflow-y: auto;
+  }
+
+  .admin-telegram-help-step__image,
+  .admin-kinescope-step__image {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .admin-connection-result {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .admin-live-preview-column {
+    display: none;
+  }
+}
+
 [hidden],
 .admin-layout[hidden],
 .admin-courses-dashboard[hidden],
