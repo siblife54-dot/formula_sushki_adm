@@ -2971,24 +2971,25 @@ function getDefaultAdminTab() {
       '<div class="admin-telegram-help-modal__backdrop" data-telegram-help-close="true"></div>',
       '<div class="admin-telegram-help-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="telegramBotHelpTitle">',
       '<div class="admin-telegram-help-modal__head">',
-      '<h3 id="telegramBotHelpTitle" class="admin-telegram-help-modal__title">Как создать Telegram-бота</h3>',
+      '<h3 id="telegramBotHelpTitle" class="admin-telegram-help-modal__title">Как создать Telegram-бота и подключить кабинет</h3>',
       '<button class="admin-telegram-help-modal__close" type="button" aria-label="Закрыть" data-telegram-help-close="true">×</button>',
       '</div>',
+      '<p class="admin-telegram-help-modal__subtitle">Следуйте шагам ниже. Это займёт 3–5 минут.</p>',
       '<div class="admin-telegram-help-modal__content">',
-      '<ol class="admin-telegram-help-modal__steps">',
-      '<li>Откройте Telegram и найдите бота @BotFather.</li>',
-      '<li>Нажмите “Start” или отправьте команду:<br><span class="admin-telegram-help-modal__example">/start</span></li>',
-      '<li>Отправьте команду:<br><span class="admin-telegram-help-modal__example">/newbot</span></li>',
-      '<li>Введите название бота. Это имя будут видеть пользователи. Например: “Курс Анны”.</li>',
-      '<li>Введите username бота. Он должен заканчиваться на bot. Например: anna_course_bot.</li>',
-      '<li>BotFather пришлёт сообщение с токеном. Он выглядит примерно так:<br><span class="admin-telegram-help-modal__example">123456789:AAExampleTokenExampleTokenExample</span></li>',
-      '<li>Скопируйте этот токен и вставьте его в поле “Bot Token” в админке.</li>',
-      '<li>В поле “Название кнопки” укажите текст кнопки, которую увидит ученик. Например: “Открыть курс” или “Перейти к урокам”.</li>',
-      '<li>Нажмите “Подключить Telegram”.</li>',
-      '</ol>',
-      '<div class="admin-telegram-help-modal__warning">Не публикуйте Bot Token в открытом доступе и не отправляйте его посторонним. Токен даёт доступ к управлению ботом.</div>',
+      '<section class="admin-telegram-help-step">',
+      '<span class="admin-telegram-help-step__badge">Шаг 1</span><h4>Откройте BotFather</h4>',
+      '<p>Перейдите в Telegram и откройте @BotFather. Нажмите на кнопку открытия Mini App BotFather.</p>',
+      '<img class="admin-telegram-help-step__image" src="assets/images/bf0.jpg" alt="Шаг 1: открытие BotFather в Telegram" loading="lazy">',
+      '</section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 2</span><h4>Создайте нового бота</h4><p>В BotFather нажмите Create a New Bot.</p><img class="admin-telegram-help-step__image" src="assets/images/bf1.jpg" alt="Шаг 2: Create a New Bot в BotFather" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 3</span><h4>Заполните данные бота</h4><p>Введите название бота — его будут видеть ученики. Затем укажите username бота. Username должен заканчиваться на bot.</p><div class="admin-telegram-help-step__examples"><p><strong>Название:</strong> “Курс Анны”</p><p><strong>Username:</strong> “anna_course_bot”</p></div><img class="admin-telegram-help-step__image" src="assets/images/bf2.jpg" alt="Шаг 3: заполнение названия и username бота" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 4</span><h4>Скопируйте API Token</h4><p>После создания бота BotFather покажет API Token. Скопируйте его и вставьте в поле Bot Token в админке.</p><div class="admin-telegram-help-modal__warning">Не публикуйте API Token и не отправляйте его посторонним. Он даёт доступ к управлению ботом.</div><img class="admin-telegram-help-step__image" src="assets/images/bf3.jpg" alt="Шаг 4: копирование API Token бота" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 5</span><h4>Подключите Mini App к боту</h4><p>После вставки Bot Token и названия кнопки нажмите Подключить Telegram. Сервис автоматически добавит кнопку с кабинетом курса в вашего бота.</p><img class="admin-telegram-help-step__image" src="assets/images/bf4.jpg" alt="Шаг 5: подключение Mini App к Telegram-боту" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 6</span><h4>Перейдите в созданного бота</h4><p>Откройте созданного бота, чтобы проверить, как всё выглядит для ученика.</p><img class="admin-telegram-help-step__image" src="assets/images/bf5.jpg" alt="Шаг 6: переход в созданного Telegram-бота" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 7</span><h4>Скопируйте название бота</h4><p>Если нужно отправить ссылку ученикам, скопируйте username бота. Обычно он выглядит так: @anna_course_bot.</p><img class="admin-telegram-help-step__image" src="assets/images/bf6.jpg" alt="Шаг 7: копирование username бота" loading="lazy"></section>',
+      '<section class="admin-telegram-help-step"><span class="admin-telegram-help-step__badge">Шаг 8</span><h4>Откройте кабинет ученика</h4><p>В созданном боте нажмите кнопку кабинета курса. Должен открыться ваш WebApp с уроками.</p><img class="admin-telegram-help-step__image" src="assets/images/bf7.jpg" alt="Шаг 8: открытие кабинета ученика в WebApp" loading="lazy"></section>',
       '</div>',
-      '<div class="admin-kinescope-modal__actions"><button class="btn btn-primary" type="button" data-telegram-help-close="true">Понятно</button></div>',
+      '<div class="admin-telegram-help-modal__actions"><button class="btn btn-secondary" type="button" data-telegram-open-botfather="true">Открыть BotFather</button><button class="btn btn-primary" type="button" data-telegram-help-close="true">Понятно</button></div>',
       '</div>'
     ].join("");
     document.body.appendChild(modal);
@@ -3185,6 +3186,13 @@ function getDefaultAdminTab() {
       if (telegramHelpClose) {
         event.preventDefault();
         closeTelegramBotHelpModal();
+        return;
+      }
+
+      var openBotFatherBtn = event.target.closest("[data-telegram-open-botfather='true']");
+      if (openBotFatherBtn) {
+        event.preventDefault();
+        window.open("https://t.me/BotFather", "_blank");
         return;
       }
 
