@@ -32,6 +32,9 @@
   };
   var ALLOWED_PREVIEW_MIME_TYPES = ["image/jpeg", "image/png", "image/webp"];
   var MAX_PREVIEW_FILE_SIZE = 5 * 1024 * 1024;
+  var ALLOWED_LESSON_FILE_MIME_TYPES = ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/vnd.ms-excel", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "application/vnd.ms-powerpoint", "application/vnd.openxmlformats-officedocument.presentationml.presentation", "application/zip", "application/x-zip-compressed", "application/vnd.rar", "application/x-rar-compressed", "image/png", "image/jpeg", "image/webp"];
+  var ALLOWED_LESSON_FILE_EXTENSIONS = ["pdf", "doc", "docx", "xls", "xlsx", "ppt", "pptx", "zip", "rar", "png", "jpg", "jpeg", "webp"];
+  var MAX_LESSON_FILE_SIZE = 10 * 1024 * 1024;
   var currentAccountId = null;
   var currentAccount = null;
   var TARIFF_LIMITS = {
@@ -1702,6 +1705,10 @@ function getDefaultAdminTab() {
       '<label>Ссылка на файл Google Drive',
       '<input class="file-link-input" data-block-id="' + blockId + '" type="text" placeholder="https://drive.google.com/file/d/.../view" />',
       '</label>',
+      '<p class="admin-hint admin-image-upload-hint">Или загрузите файл с компьютера (PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX, ZIP, RAR, PNG, JPG, JPEG, WEBP), до 10 MB.</p>',
+      '<label>Загрузить файл',
+      '<input class="file-upload-input" data-block-id="' + blockId + '" type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip,.rar,.png,.jpg,.jpeg,.webp" />',
+      '</label>',
       '<button class="btn btn-primary save-file-btn" data-block-id="' + blockId + '" type="button">Сохранить файл</button>',
       '</div>',
       '<div class="admin-mini-cards">',
@@ -1764,10 +1771,12 @@ function getDefaultAdminTab() {
     }
 
     return validFiles.map(function (file) {
+      var isUrlFile = /^https?:\/\//i.test(String(file.file_id || "").trim());
       return [
         '<div class="admin-mini-card">',
         '<p><strong>' + escapeHtml(file.file_label || "Без названия") + '</strong></p>',
-        '<p>ID: ' + escapeHtml(file.file_id || "") + '</p>',
+        isUrlFile ? '<p>Файл загружен</p>' : '<p>ID: ' + escapeHtml(file.file_id || "") + '</p>',
+        isUrlFile ? '<a class="admin-btn-ghost" href="' + escapeAttr(file.file_id || "") + '" target="_blank" rel="noopener noreferrer">Открыть</a>' : "",
         '<button class="admin-btn-ghost delete-item-btn" data-item-id="' + file.id + '" type="button">Удалить</button>',
         '</div>'
       ].join("");
@@ -1809,6 +1818,23 @@ function getDefaultAdminTab() {
       .replace(/[^a-z0-9._-]+/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-|-$/g, "");
+  }
+
+  function getFileExtension(fileName) {
+    var match = String(fileName || "").toLowerCase().match(/\.([a-z0-9]+)$/i);
+    return match ? match[1] : "";
+  }
+
+  function validateLessonFile(file) {
+    if (!file) return { isValid: false, message: "Файл не выбран" };
+    var extension = getFileExtension(file.name);
+    if (ALLOWED_LESSON_FILE_MIME_TYPES.indexOf(file.type) === -1 && ALLOWED_LESSON_FILE_EXTENSIONS.indexOf(extension) === -1) {
+      return { isValid: false, message: "Неподдерживаемый формат файла." };
+    }
+    if (file.size > MAX_LESSON_FILE_SIZE) {
+      return { isValid: false, message: "Файл слишком большой. Максимальный размер — 10 MB." };
+    }
+    return { isValid: true, message: "" };
   }
 
   async function saveLessonPreviewUrl(lessonId, url) {
@@ -1910,6 +1936,35 @@ function getDefaultAdminTab() {
     }
 
     return { publicUrl: publicUrl, filePath: filePath };
+  }
+
+  async function uploadLessonFile(blockId, file) {
+    if (!state.selectedLesson) throw new Error("Сначала выберите урок");
+    var validation = validateLessonFile(file);
+    if (!validation.isValid) throw new Error(validation.message);
+
+    var client = getClient();
+    if (!client) throw new Error("Supabase client not initialized");
+
+    var folderCourseId = getActiveCourseId() || state.selectedLesson.course_id || "course";
+    var folderLessonId = state.selectedLesson.lesson_id || String(state.selectedLesson.id);
+    var safeName = sanitizeFileName(file.name || "lesson-file");
+    var filePath = "course-files/" + folderCourseId + "/" + folderLessonId + "/" + Date.now() + "-" + safeName;
+
+    var uploadResult = await client.storage
+      .from("lesson-images")
+      .upload(filePath, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+
+    if (uploadResult.error) {
+      console.error(uploadResult.error);
+      throw new Error("Ошибка загрузки файла в Storage");
+    }
+
+    var publicResult = client.storage.from("lesson-images").getPublicUrl(filePath);
+    var publicUrl = publicResult && publicResult.data ? publicResult.data.publicUrl : "";
+    if (!publicUrl) throw new Error("Не удалось получить public URL файла");
+
+    return { publicUrl: publicUrl, filePath: filePath, originalName: file.name || "" };
   }
 
   async function clearLessonPreview() {
@@ -3389,21 +3444,47 @@ function getDefaultAdminTab() {
         var fileBlockId = saveFileBtn.getAttribute("data-block-id");
         var fileLabelInput = document.querySelector('.file-label-input[data-block-id="' + fileBlockId + '"]');
         var fileLinkInput = document.querySelector('.file-link-input[data-block-id="' + fileBlockId + '"]');
+        var fileUploadInput = document.querySelector('.file-upload-input[data-block-id="' + fileBlockId + '"]');
 
         if (!fileLabelInput || !fileLinkInput) return;
 
         var fileLabel = fileLabelInput.value.trim();
         var fileLinkValue = fileLinkInput.value.trim();
-        var fileId = extractGoogleDriveFileId(fileLinkValue);
+        var selectedFile = fileUploadInput && fileUploadInput.files ? fileUploadInput.files[0] : null;
 
-        if (!fileLabel || !fileLinkValue) {
-          alert("Заполните название файла и ссылку Google Drive");
+        if (!fileLinkValue && !selectedFile) {
+          alert("Укажите ссылку на файл или загрузите файл с компьютера.");
           return;
         }
 
-        if (!fileId) {
-          alert("Не удалось определить ID файла. Вставьте ссылку Google Drive на файл.");
+        if (selectedFile) {
+          void uploadLessonFile(fileBlockId, selectedFile).then(function (uploadResult) {
+            var nextFileLabel = fileLabel || uploadResult.originalName || "Файл";
+            return createFileItem(fileBlockId, nextFileLabel, uploadResult.publicUrl).then(function () {
+              fileLabelInput.value = "";
+              fileLinkInput.value = "";
+              if (fileUploadInput) fileUploadInput.value = "";
+              alert("Файл загружен");
+            });
+          }).catch(function (error) {
+            console.error(error);
+            alert(error && error.message ? error.message : "Не удалось загрузить файл");
+          });
           return;
+        }
+
+        var fileId = fileLinkValue;
+        if (!/^https?:\/\//i.test(fileLinkValue)) {
+          var parsedFileId = extractGoogleDriveFileId(fileLinkValue);
+          if (!parsedFileId) {
+            alert("Не удалось определить ID файла. Вставьте ссылку Google Drive или корректный ID.");
+            return;
+          }
+          fileId = parsedFileId;
+        }
+
+        if (!fileLabel) {
+          fileLabel = "Файл";
         }
 
         fileLabelInput.value = "";
