@@ -947,12 +947,12 @@ body[data-page="admin"] {
 
 .admin-telegram-help-modal__dialog {
   position: relative;
-  width: min(640px, calc(100vw - 24px));
+  width: min(760px, calc(100vw - 20px));
   max-height: 85vh;
   padding: 20px;
-  border-radius: 16px;
+  border-radius: 20px;
   border: 1px solid color-mix(in srgb, var(--border) 65%, #dbe6fc 35%);
-  background: linear-gradient(180deg, rgba(18, 30, 48, 0.95), rgba(9, 17, 29, 0.96));
+  background: linear-gradient(160deg, rgba(20, 36, 56, 0.9), rgba(12, 22, 36, 0.92));
   color: #e6f0ff;
   box-shadow: 0 24px 42px rgba(2, 8, 16, 0.56), 0 7px 18px rgba(6, 12, 20, 0.48);
   transform: translateY(12px) scale(0.985);
@@ -979,6 +979,12 @@ body[data-page="admin"] {
   margin: 0;
 }
 
+.admin-telegram-help-modal__subtitle {
+  margin: 0 0 12px;
+  color: #b7c8e6;
+  font-size: 14px;
+}
+
 .admin-telegram-help-modal__close {
   width: 30px;
   height: 30px;
@@ -998,14 +1004,54 @@ body[data-page="admin"] {
   overflow-y: auto;
   padding-right: 6px;
   margin-right: -2px;
+  display: grid;
+  gap: 12px;
 }
 
-.admin-telegram-help-modal__steps {
-  margin: 0;
-  padding-left: 20px;
+.admin-telegram-help-step {
+  border-radius: 16px;
+  border: 1px solid rgba(193, 217, 255, 0.16);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.015));
+  padding: 14px;
   display: grid;
   gap: 10px;
+}
+
+.admin-telegram-help-step__badge {
+  display: inline-flex;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #e8dcff;
+  background: linear-gradient(180deg, rgba(150, 95, 255, 0.35), rgba(108, 63, 214, 0.42));
+  border: 1px solid rgba(193, 154, 255, 0.44);
+}
+
+.admin-telegram-help-step h4 {
+  margin: 0;
+  font-size: 17px;
+}
+
+.admin-telegram-help-step p {
+  margin: 0;
   line-height: 1.5;
+  color: #d9e7ff;
+}
+
+.admin-telegram-help-step__examples {
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(198, 220, 255, 0.2);
+  background: rgba(10, 18, 32, 0.68);
+}
+
+.admin-telegram-help-step__image {
+  width: 100%;
+  max-width: 100%;
+  border-radius: 16px;
+  display: block;
 }
 
 .admin-telegram-help-modal__example {
@@ -1018,7 +1064,7 @@ body[data-page="admin"] {
 }
 
 .admin-telegram-help-modal__warning {
-  margin-top: 14px;
+  margin-top: 2px;
   padding: 10px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255, 205, 114, 0.22);
@@ -1026,6 +1072,31 @@ body[data-page="admin"] {
   color: #ffe3b6;
   font-size: 13px;
   line-height: 1.45;
+}
+
+.admin-telegram-help-modal__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 640px) {
+  .admin-telegram-help-modal__dialog {
+    width: calc(100vw - 12px);
+    max-height: 88vh;
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .admin-telegram-help-step {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .admin-telegram-help-step h4 {
+    font-size: 16px;
+  }
 }
 
 .admin-form input,
