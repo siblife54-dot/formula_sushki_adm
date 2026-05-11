@@ -7,6 +7,7 @@
   var DEBUG_LAST_CONTEXT = null;
   var APP_STORAGE = null;
   var APP_PROFILE = null;
+  var COURSE_SETTINGS = null;
   var NUTRITION = null;
   var LAST_LESSONS = [];
   var STORAGE_DEBUG = {
@@ -119,7 +120,7 @@
     document.body.setAttribute("data-preview-theme", themeId);
   }
 
-  async function fetchCourseThemeId(config) {
+  async function fetchCourseSettings(config) {
     var client = window.getSupabaseClient();
     if (!client) {
       throw new Error("Supabase client not initialized. Проверьте config.js и supabase.js");
@@ -127,16 +128,26 @@
 
     var result = await client
       .from("course_settings")
-      .select("theme_id")
+      .select("theme_id, addon_nutrition_calculator")
       .eq("course_id", getActiveCourseId())
       .maybeSingle();
 
     if (result.error) {
       console.warn("Supabase course_settings load error:", result.error);
-      return "dark_premium";
+      return {
+        theme_id: "dark_premium",
+        addon_nutrition_calculator: false
+      };
     }
 
-    return normalizeThemeId(result.data && result.data.theme_id);
+    return {
+      theme_id: normalizeThemeId(result.data && result.data.theme_id),
+      addon_nutrition_calculator: Boolean(result.data && result.data.addon_nutrition_calculator === true)
+    };
+  }
+
+  function isNutritionCalculatorEnabled(courseSettings) {
+    return Boolean(courseSettings && courseSettings.addon_nutrition_calculator === true);
   }
 
   function initTelegramViewport() {
@@ -529,6 +540,12 @@
 
   async function renderNutritionCard() {
     var host = document.getElementById("nutritionCardHost");
+    var profileHint = document.getElementById("profileNutritionHint");
+    if (!isNutritionCalculatorEnabled(COURSE_SETTINGS)) {
+      if (host) host.innerHTML = "";
+      if (profileHint) profileHint.textContent = "";
+      return;
+    }
     if (!host || !NUTRITION) return;
 
     var plan = await NUTRITION.loadPlan();
@@ -544,7 +561,6 @@
       '</section>'
     ].join('');
 
-    var profileHint = document.getElementById("profileNutritionHint");
     if (profileHint) {
       profileHint.textContent = hasPlan ? ('КБЖУ: ' + plan.calories + ' ккал') : '';
     }
@@ -1033,11 +1049,14 @@
     console.log("activeCourseId:", getActiveCourseId());
     var config = getConfig();
     var themeId = "dark_premium";
+    var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false };
     try {
-      themeId = await fetchCourseThemeId(config);
+      courseSettings = await fetchCourseSettings(config);
+      themeId = courseSettings.theme_id;
     } catch (error) {
       console.error(error);
     }
+    COURSE_SETTINGS = courseSettings;
     if (isPreviewMode()) {
       var previewThemeId = getPreviewThemeId();
       if (previewThemeId) themeId = previewThemeId;
@@ -1046,7 +1065,9 @@
     initTelegramViewport();
     await initStorage();
     APP_PROFILE = getProfile();
-    if (globalThis.NutritionCalculator && typeof globalThis.NutritionCalculator.create === "function") {
+    if (isNutritionCalculatorEnabled(COURSE_SETTINGS)
+      && globalThis.NutritionCalculator
+      && typeof globalThis.NutritionCalculator.create === "function") {
       NUTRITION = globalThis.NutritionCalculator.create({
         storage: APP_STORAGE,
         onPlanSaved: function () {
@@ -1056,6 +1077,8 @@
         },
         getLessonLink: getNutritionLessonLink
       });
+    } else {
+      NUTRITION = null;
     }
 
     var page = document.body.getAttribute("data-page");
@@ -1103,10 +1126,32 @@ document.addEventListener("click", function (e) {
 
     try {
       var themeId = "dark_premium";
+      var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false };
       try {
-        themeId = await fetchCourseThemeId(config);
+        courseSettings = await fetchCourseSettings(config);
+        themeId = courseSettings.theme_id;
       } catch (error) {
         console.error(error);
+      }
+      COURSE_SETTINGS = courseSettings;
+
+      if (isNutritionCalculatorEnabled(COURSE_SETTINGS)
+        && !NUTRITION
+        && globalThis.NutritionCalculator
+        && typeof globalThis.NutritionCalculator.create === "function") {
+        NUTRITION = globalThis.NutritionCalculator.create({
+          storage: APP_STORAGE,
+          onPlanSaved: function () {
+            if (document.body.getAttribute("data-page") === "dashboard") {
+              void renderNutritionCard();
+            }
+          },
+          getLessonLink: getNutritionLessonLink
+        });
+      }
+
+      if (!isNutritionCalculatorEnabled(COURSE_SETTINGS)) {
+        NUTRITION = null;
       }
 
       themeId = (previewThemeOverride && (previewThemeOverride.id || previewThemeOverride.theme_id || previewThemeOverride.slug))
