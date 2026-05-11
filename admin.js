@@ -1949,10 +1949,10 @@ function getDefaultAdminTab() {
     var folderCourseId = getActiveCourseId() || state.selectedLesson.course_id || "course";
     var folderLessonId = state.selectedLesson.lesson_id || String(state.selectedLesson.id);
     var safeName = sanitizeFileName(file.name || "lesson-file");
-    var filePath = "course-files/" + folderCourseId + "/" + folderLessonId + "/" + Date.now() + "-" + safeName;
+    var filePath = folderCourseId + "/" + folderLessonId + "/" + Date.now() + "-" + safeName;
 
     var uploadResult = await client.storage
-      .from("lesson-images")
+      .from("course-files")
       .upload(filePath, file, { upsert: false, contentType: file.type || "application/octet-stream" });
 
     if (uploadResult.error) {
@@ -1960,7 +1960,7 @@ function getDefaultAdminTab() {
       throw new Error("Ошибка загрузки файла в Storage");
     }
 
-    var publicResult = client.storage.from("lesson-images").getPublicUrl(filePath);
+    var publicResult = client.storage.from("course-files").getPublicUrl(filePath);
     var publicUrl = publicResult && publicResult.data ? publicResult.data.publicUrl : "";
     if (!publicUrl) throw new Error("Не удалось получить public URL файла");
 
