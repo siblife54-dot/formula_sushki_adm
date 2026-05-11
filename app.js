@@ -732,6 +732,13 @@
     return normalized;
   }
 
+  function resolveLessonFileUrl(fileId) {
+    var raw = String(fileId || "").trim();
+    if (!raw) return "";
+    if (/^https?:\/\//i.test(raw)) return raw;
+    return "https://drive.google.com/file/d/" + encodeURIComponent(raw) + "/view?usp=sharing";
+  }
+
   // ===== Attachments: parse + tags =====
   function parseAttachments(raw) {
     if (!raw) return [];
@@ -878,7 +885,8 @@
             }
 
             if (item.item_type === "file" && item.file_id) {
-              var fileUrl = "https://drive.google.com/file/d/" + encodeURIComponent(item.file_id) + "/view?usp=sharing";
+              var fileUrl = resolveLessonFileUrl(item.file_id);
+              if (!fileUrl) return;
               var fileLabel = item.file_label || "Материал";
 
               html += [
