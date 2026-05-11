@@ -8,6 +8,7 @@
   var APP_STORAGE = null;
   var APP_PROFILE = null;
   var COURSE_SETTINGS = null;
+  var COURSE_ACCESS = null;
   var NUTRITION = null;
   var LAST_LESSONS = [];
   var STORAGE_DEBUG = {
@@ -144,6 +145,48 @@
       theme_id: normalizeThemeId(result.data && result.data.theme_id),
       addon_nutrition_calculator: Boolean(result.data && result.data.addon_nutrition_calculator === true)
     };
+  }
+
+  async function fetchCourseAccessInfo() {
+    var client = window.getSupabaseClient();
+    if (!client) return { tariff: "trial", isFreeTier: true };
+
+    var result = await client
+      .from("courses")
+      .select("status, account:accounts(tariff)")
+      .eq("course_id", getActiveCourseId())
+      .maybeSingle();
+
+    if (result.error) {
+      console.warn("Supabase course access load error:", result.error);
+      return { tariff: "trial", isFreeTier: true };
+    }
+
+    var tariff = String(result.data && result.data.account && result.data.account.tariff ? result.data.account.tariff : "trial").toLowerCase();
+    return {
+      tariff: tariff,
+      status: String(result.data && result.data.status ? result.data.status : "active").toLowerCase(),
+      isFreeTier: tariff === "trial" || tariff === "free"
+    };
+  }
+
+  function renderDashboardWatermark(courseAccess) {
+    var host = document.getElementById("dashboardWatermarkHost");
+    if (!host) return;
+
+    if (!courseAccess || !courseAccess.isFreeTier) {
+      host.innerHTML = "";
+      return;
+    }
+
+    host.innerHTML = [
+      '<div class="dashboard-watermark-wrap">',
+      '<a class="dashboard-watermark-link" href="https://t.me/mindcore_miniapp_bot" target="_blank" rel="noopener noreferrer" aria-label="Открыть MindCore в Telegram">',
+      '<span class="dashboard-watermark-icon" aria-hidden="true">⚡</span>',
+      '<span>Создано в MindCore</span>',
+      '</a>',
+      '</div>'
+    ].join("");
   }
 
   function isNutritionCalculatorEnabled(courseSettings) {
@@ -598,6 +641,7 @@
     var accessModel = getAccessibilityModel(lessons, completed);
 
     await renderNutritionCard();
+    renderDashboardWatermark(COURSE_ACCESS);
     await renderDebugPanel(config, lessons, completed, accessModel);
 
     if (!lessons.length) {
@@ -1056,6 +1100,7 @@
     } catch (error) {
       console.error(error);
     }
+    COURSE_ACCESS = await fetchCourseAccessInfo();
     COURSE_SETTINGS = courseSettings;
     if (isPreviewMode()) {
       var previewThemeId = getPreviewThemeId();
@@ -1133,6 +1178,7 @@ document.addEventListener("click", function (e) {
       } catch (error) {
         console.error(error);
       }
+      COURSE_ACCESS = await fetchCourseAccessInfo();
       COURSE_SETTINGS = courseSettings;
 
       if (isNutritionCalculatorEnabled(COURSE_SETTINGS)
