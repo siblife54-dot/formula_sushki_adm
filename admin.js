@@ -2960,6 +2960,60 @@ function getDefaultAdminTab() {
     }, 180);
   }
 
+  function ensureTelegramBotHelpModal() {
+    var existing = document.getElementById("telegramBotHelpModal");
+    if (existing) return existing;
+    var modal = document.createElement("div");
+    modal.id = "telegramBotHelpModal";
+    modal.className = "admin-telegram-help-modal";
+    modal.hidden = true;
+    modal.innerHTML = [
+      '<div class="admin-telegram-help-modal__backdrop" data-telegram-help-close="true"></div>',
+      '<div class="admin-telegram-help-modal__dialog" role="dialog" aria-modal="true" aria-labelledby="telegramBotHelpTitle">',
+      '<div class="admin-telegram-help-modal__head">',
+      '<h3 id="telegramBotHelpTitle" class="admin-telegram-help-modal__title">Как создать Telegram-бота</h3>',
+      '<button class="admin-telegram-help-modal__close" type="button" aria-label="Закрыть" data-telegram-help-close="true">×</button>',
+      '</div>',
+      '<div class="admin-telegram-help-modal__content">',
+      '<ol class="admin-telegram-help-modal__steps">',
+      '<li>Откройте Telegram и найдите бота @BotFather.</li>',
+      '<li>Нажмите “Start” или отправьте команду:<br><span class="admin-telegram-help-modal__example">/start</span></li>',
+      '<li>Отправьте команду:<br><span class="admin-telegram-help-modal__example">/newbot</span></li>',
+      '<li>Введите название бота. Это имя будут видеть пользователи. Например: “Курс Анны”.</li>',
+      '<li>Введите username бота. Он должен заканчиваться на bot. Например: anna_course_bot.</li>',
+      '<li>BotFather пришлёт сообщение с токеном. Он выглядит примерно так:<br><span class="admin-telegram-help-modal__example">123456789:AAExampleTokenExampleTokenExample</span></li>',
+      '<li>Скопируйте этот токен и вставьте его в поле “Bot Token” в админке.</li>',
+      '<li>В поле “Название кнопки” укажите текст кнопки, которую увидит ученик. Например: “Открыть курс” или “Перейти к урокам”.</li>',
+      '<li>Нажмите “Подключить Telegram”.</li>',
+      '</ol>',
+      '<div class="admin-telegram-help-modal__warning">Не публикуйте Bot Token в открытом доступе и не отправляйте его посторонним. Токен даёт доступ к управлению ботом.</div>',
+      '</div>',
+      '<div class="admin-kinescope-modal__actions"><button class="btn btn-primary" type="button" data-telegram-help-close="true">Понятно</button></div>',
+      '</div>'
+    ].join("");
+    document.body.appendChild(modal);
+    return modal;
+  }
+
+  function openTelegramBotHelpModal() {
+    var modal = ensureTelegramBotHelpModal();
+    modal.hidden = false;
+    requestAnimationFrame(function () {
+      modal.classList.add("is-open");
+    });
+  }
+
+  function closeTelegramBotHelpModal() {
+    var modal = document.getElementById("telegramBotHelpModal");
+    if (!modal) return;
+    modal.classList.remove("is-open");
+    setTimeout(function () {
+      if (!modal.classList.contains("is-open")) {
+        modal.hidden = true;
+      }
+    }, 180);
+  }
+
   function positionTooltip(trigger, popover) {
     if (!trigger || !popover) return;
 
@@ -3120,12 +3174,27 @@ function getDefaultAdminTab() {
         return;
       }
 
+      var telegramHelpTrigger = event.target.closest("#telegramBotHelpTrigger");
+      if (telegramHelpTrigger) {
+        event.preventDefault();
+        openTelegramBotHelpModal();
+        return;
+      }
+
+      var telegramHelpClose = event.target.closest("[data-telegram-help-close='true']");
+      if (telegramHelpClose) {
+        event.preventDefault();
+        closeTelegramBotHelpModal();
+        return;
+      }
+
       closeTooltip();
     });
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         closeKinescopeHelpModal();
+        closeTelegramBotHelpModal();
         closeTooltip();
       }
     });
