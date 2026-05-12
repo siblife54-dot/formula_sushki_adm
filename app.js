@@ -582,13 +582,16 @@
   }
 
   async function renderNutritionCard() {
+    var section = document.getElementById("nutritionSection");
     var host = document.getElementById("nutritionCardHost");
     var profileHint = document.getElementById("profileNutritionHint");
     if (!isNutritionCalculatorEnabled(COURSE_SETTINGS)) {
+      if (section) section.hidden = true;
       if (host) host.innerHTML = "";
       if (profileHint) profileHint.textContent = "";
       return;
     }
+    if (section) section.hidden = false;
     if (!host || !NUTRITION) return;
 
     var plan = await NUTRITION.loadPlan();
