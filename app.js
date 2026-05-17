@@ -10,6 +10,7 @@
   var COURSE_SETTINGS = null;
   var COURSE_ACCESS = null;
   var NUTRITION = null;
+  var EMOTION_STORAGE_KEY = "emotion_navigator_state";
   var LAST_LESSONS = [];
   var STORAGE_DEBUG = {
     telegramDetected: false,
@@ -129,7 +130,7 @@
 
     var result = await client
       .from("course_settings")
-      .select("theme_id, addon_nutrition_calculator")
+      .select("theme_id, addon_nutrition_calculator, addon_emotion_navigator")
       .eq("course_id", getActiveCourseId())
       .maybeSingle();
 
@@ -137,13 +138,15 @@
       console.warn("Supabase course_settings load error:", result.error);
       return {
         theme_id: "dark_premium",
-        addon_nutrition_calculator: false
+        addon_nutrition_calculator: false,
+        addon_emotion_navigator: false
       };
     }
 
     return {
       theme_id: normalizeThemeId(result.data && result.data.theme_id),
-      addon_nutrition_calculator: Boolean(result.data && result.data.addon_nutrition_calculator === true)
+      addon_nutrition_calculator: Boolean(result.data && result.data.addon_nutrition_calculator === true),
+      addon_emotion_navigator: Boolean(result.data && result.data.addon_emotion_navigator === true)
     };
   }
 
@@ -191,6 +194,107 @@
 
   function isNutritionCalculatorEnabled(courseSettings) {
     return Boolean(courseSettings && courseSettings.addon_nutrition_calculator === true);
+  }
+
+
+  function isEmotionNavigatorEnabled(courseSettings) {
+    return Boolean(courseSettings && courseSettings.addon_emotion_navigator === true);
+  }
+
+  function getEmotionNavigatorConfig() {
+    return {
+      anxiety: { title: "Тревога", description: "Ваше тело может находиться в режиме ожидания угрозы, даже если реальной опасности сейчас нет.", recommendation: "Сделайте медленный выдох длиннее вдоха в течение 1 минуты.", practice: "Практика “5-4-3-2-1”", lesson: "Как успокоить тело при тревоге" },
+      fear: { title: "Страх", description: "Страх часто появляется, когда психика пытается защитить вас от неизвестности.", recommendation: "Попробуйте назвать вслух то, чего вы боитесь.", practice: "Техника “Рациональный вопрос”", lesson: "Как работать со страхом" },
+      anger: { title: "Злость", description: "Злость — это сигнал о нарушенных границах или внутреннем напряжении.", recommendation: "Попробуйте выписать мысли без цензуры 2 минуты.", practice: "Разгрузка через письмо", lesson: "Экологичное проживание злости" },
+      guilt: { title: "Вина", description: "Чувство вины часто заставляет нас требовать от себя невозможного.", recommendation: "Спросите себя: “Точно ли я обязан быть идеальным?”", practice: "Практика самоподдержки", lesson: "Как перестать жить через вину" },
+      fatigue: { title: "Усталость", description: "Иногда психика устает раньше тела.", recommendation: "Сделайте паузу без телефона хотя бы на 10 минут.", practice: "Практика восстановления внимания", lesson: "Как восстановить внутренний ресурс" },
+      apathy: { title: "Апатия", description: "Апатия может быть способом психики защититься от перегрузки.", recommendation: "Попробуйте сделать одно очень маленькое действие прямо сейчас.", practice: "Метод “микрошагов”", lesson: "Как выйти из состояния апатии" }
+    };
+  }
+
+  function renderEmotionNavigator() {
+    var section = document.getElementById("emotionNavigatorSection");
+    var host = document.getElementById("emotionNavigatorHost");
+    if (!isEmotionNavigatorEnabled(COURSE_SETTINGS)) {
+      if (section) section.hidden = true;
+      if (host) host.innerHTML = "";
+      return;
+    }
+    if (!section || !host) return;
+    section.hidden = false;
+
+    var config = getEmotionNavigatorConfig();
+    var order = ["anxiety", "fear", "anger", "guilt", "fatigue", "apathy"];
+    var savedState = localStorage.getItem(EMOTION_STORAGE_KEY);
+    var selected = config[savedState] ? savedState : "";
+
+    host.innerHTML = [
+      '<section class="card emotion-card">',
+      '<h3 class="emotion-title">Как вы себя чувствуете сегодня?</h3>',
+      '<p class="emotion-subtitle">Выберите состояние — и получите короткую рекомендацию.</p>',
+      '<div class="emotion-grid" id="emotionGrid"></div>',
+      '<div class="emotion-result" id="emotionResult"></div>',
+      '</section>'
+    ].join("");
+
+    var grid = document.getElementById("emotionGrid");
+    var result = document.getElementById("emotionResult");
+
+    function showDemoToast() {
+      var toast = document.createElement("div");
+      toast.className = "emotion-toast";
+      toast.textContent = "В полной версии здесь откроется рекомендованный урок.";
+      host.appendChild(toast);
+      requestAnimationFrame(function () { toast.classList.add("is-visible"); });
+      setTimeout(function () {
+        toast.classList.remove("is-visible");
+        setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 220);
+      }, 2200);
+    }
+
+    function renderResult(stateKey) {
+      var state = config[stateKey];
+      if (!state) { result.innerHTML = ""; return; }
+      result.innerHTML = [
+        '<section class="emotion-result-card">',
+        '<h4>' + escapeHtml(state.title) + '</h4>',
+        '<p><strong>Описание:</strong> ' + escapeHtml(state.description) + '</p>',
+        '<p><strong>Рекомендация:</strong> ' + escapeHtml(state.recommendation) + '</p>',
+        '<p><strong>Упражнение:</strong> ' + escapeHtml(state.practice) + '</p>',
+        '<p><strong>Урок:</strong> ' + escapeHtml(state.lesson) + '</p>',
+        '<div class="emotion-actions">',
+        '<button type="button" class="btn btn-primary" id="emotionOpenLessonBtn">Открыть подходящий урок</button>',
+        '<button type="button" class="btn" id="emotionResetBtn">Выбрать другое состояние</button>',
+        '</div>',
+        '</section>'
+      ].join("");
+      var openBtn = document.getElementById("emotionOpenLessonBtn");
+      if (openBtn) openBtn.addEventListener("click", showDemoToast);
+      var resetBtn = document.getElementById("emotionResetBtn");
+      if (resetBtn) resetBtn.addEventListener("click", function () {
+        selected = "";
+        localStorage.removeItem(EMOTION_STORAGE_KEY);
+        updateUI();
+      });
+    }
+
+    function updateUI() {
+      grid.innerHTML = order.map(function (key) {
+        var state = config[key];
+        var activeClass = selected === key ? " is-active" : "";
+        return '<button type="button" class="emotion-chip' + activeClass + '" data-emotion="' + key + '">' + escapeHtml(state.title) + '</button>';
+      }).join("");
+      grid.querySelectorAll(".emotion-chip").forEach(function (button) {
+        button.addEventListener("click", function () {
+          selected = button.getAttribute("data-emotion") || "";
+          if (selected) localStorage.setItem(EMOTION_STORAGE_KEY, selected);
+          updateUI();
+        });
+      });
+      renderResult(selected);
+    }
+
+    updateUI();
   }
 
   function initTelegramViewport() {
@@ -644,6 +748,7 @@
     var accessModel = getAccessibilityModel(lessons, completed);
 
     await renderNutritionCard();
+    renderEmotionNavigator();
     renderDashboardWatermark(COURSE_ACCESS);
     await renderDebugPanel(config, lessons, completed, accessModel);
 
@@ -1096,7 +1201,7 @@
     console.log("activeCourseId:", getActiveCourseId());
     var config = getConfig();
     var themeId = "dark_premium";
-    var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false };
+    var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false };
     try {
       courseSettings = await fetchCourseSettings(config);
       themeId = courseSettings.theme_id;
@@ -1174,7 +1279,7 @@ document.addEventListener("click", function (e) {
 
     try {
       var themeId = "dark_premium";
-      var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false };
+      var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false };
       try {
         courseSettings = await fetchCourseSettings(config);
         themeId = courseSettings.theme_id;
