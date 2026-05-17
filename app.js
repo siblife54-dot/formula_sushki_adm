@@ -11,6 +11,7 @@
   var COURSE_ACCESS = null;
   var NUTRITION = null;
   var EMOTION_STORAGE_KEY = "emotion_navigator_state";
+  var DESIGNER_XP_TOAST_KEY = "designer_xp_last_gain_v1";
   var LAST_LESSONS = [];
   var STORAGE_DEBUG = {
     telegramDetected: false,
@@ -130,7 +131,7 @@
 
     var result = await client
       .from("course_settings")
-      .select("theme_id, addon_nutrition_calculator, addon_emotion_navigator")
+      .select("theme_id, addon_nutrition_calculator, addon_emotion_navigator, addon_designer_xp")
       .eq("course_id", getActiveCourseId())
       .maybeSingle();
 
@@ -139,14 +140,16 @@
       return {
         theme_id: "dark_premium",
         addon_nutrition_calculator: false,
-        addon_emotion_navigator: false
+        addon_emotion_navigator: false,
+        addon_designer_xp: false
       };
     }
 
     return {
       theme_id: normalizeThemeId(result.data && result.data.theme_id),
       addon_nutrition_calculator: Boolean(result.data && result.data.addon_nutrition_calculator === true),
-      addon_emotion_navigator: Boolean(result.data && result.data.addon_emotion_navigator === true)
+      addon_emotion_navigator: Boolean(result.data && result.data.addon_emotion_navigator === true),
+      addon_designer_xp: Boolean(result.data && result.data.addon_designer_xp === true)
     };
   }
 
@@ -199,6 +202,25 @@
 
   function isEmotionNavigatorEnabled(courseSettings) {
     return Boolean(courseSettings && courseSettings.addon_emotion_navigator === true);
+  }
+
+  function isDesignerXpEnabled(courseSettings) {
+    return Boolean(courseSettings && courseSettings.addon_designer_xp === true);
+  }
+
+  function getDesignerLevelByXp(xp) {
+    var levels = [
+      { minXp: 0, level: 1, title: "Start" },
+      { minXp: 50, level: 2, title: "Junior" },
+      { minXp: 150, level: 3, title: "Visual" },
+      { minXp: 300, level: 4, title: "Product" },
+      { minXp: 500, level: 5, title: "Portfolio Ready" }
+    ];
+    var current = levels[0];
+    levels.forEach(function (item) {
+      if (xp >= item.minXp) current = item;
+    });
+    return { current: current, levels: levels };
   }
 
   function getEmotionNavigatorConfig() {
@@ -676,6 +698,68 @@
 
 
 
+  function renderDesignerXpToast(host) {
+    var raw = localStorage.getItem(DESIGNER_XP_TOAST_KEY);
+    if (!raw || !host) return;
+    localStorage.removeItem(DESIGNER_XP_TOAST_KEY);
+    var toast = document.createElement("div");
+    toast.className = "designer-xp-toast";
+    toast.innerHTML = '<strong>+50 XP</strong><span>Вы стали ближе к следующему уровню.</span>';
+    host.appendChild(toast);
+    requestAnimationFrame(function () { toast.classList.add("is-visible"); });
+    setTimeout(function () {
+      toast.classList.remove("is-visible");
+      setTimeout(function () { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 260);
+    }, 2200);
+  }
+
+  async function renderDesignerXpCard(lessons) {
+    var section = document.getElementById("designerXpSection");
+    var host = document.getElementById("designerXpHost");
+    if (!isDesignerXpEnabled(COURSE_SETTINGS)) {
+      if (section) section.hidden = true;
+      if (host) host.innerHTML = "";
+      return;
+    }
+    if (!section || !host) return;
+    section.hidden = false;
+
+    var completed = await loadCompleted();
+    var completedCount = lessons.filter(function (lesson) { return completed.includes(lesson.lesson_id); }).length;
+    var xp = completedCount * 50;
+    var model = getDesignerLevelByXp(xp);
+    var current = model.current;
+    var next = model.levels.find(function (item) { return item.minXp > current.minXp; }) || null;
+    var maxXp = model.levels[model.levels.length - 1].minXp;
+    var baseXp = current.minXp;
+    var targetXp = next ? next.minXp : maxXp;
+    var progress = next ? Math.max(0, Math.min(100, Math.round(((xp - baseXp) / (targetXp - baseXp)) * 100))) : 100;
+    var xpText = next ? (xp + " / " + next.minXp + " XP до следующего уровня") : (xp + " XP · Максимальный уровень достигнут");
+    var achievements = [
+      { title: "Первый экран", minLessons: 1 },
+      { title: "Работа с сетками", minLessons: 3 },
+      { title: "Портфолио", minLessons: 5 }
+    ];
+
+    host.innerHTML = [
+      '<section class="card designer-xp-card">',
+      '<p class="designer-xp-kicker">Ваш дизайнерский уровень</p>',
+      '<h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3>',
+      '<p class="designer-xp-rank">' + current.title + '</p>',
+      '<p class="designer-xp-meta">' + xpText + '</p>',
+      '<div class="designer-xp-progress"><div class="designer-xp-progress__fill" style="width:' + progress + '%"></div></div>',
+      '<ul class="designer-xp-achievements">',
+      achievements.map(function (item) {
+        var unlocked = completedCount >= item.minLessons;
+        return '<li class="' + (unlocked ? "is-unlocked" : "is-locked") + '">' + (unlocked ? "✅" : "🔒") + " " + escapeHtml(item.title) + "</li>";
+      }).join(""),
+      '</ul>',
+      '</section>'
+    ].join("");
+
+    renderDesignerXpToast(host);
+  }
+
   function getNutritionLessonLink() {
     if (!LAST_LESSONS || !LAST_LESSONS.length) return null;
     var nutritionLesson = LAST_LESSONS.find(function (lesson) {
@@ -749,6 +833,7 @@
 
     await renderNutritionCard();
     renderEmotionNavigator();
+    await renderDesignerXpCard(lessons);
     renderDashboardWatermark(COURSE_ACCESS);
     await renderDebugPanel(config, lessons, completed, accessModel);
 
@@ -1158,6 +1243,7 @@
 
     completeBtn.addEventListener("click", async function () {
       await markCompleted(lesson.lesson_id);
+      localStorage.setItem(DESIGNER_XP_TOAST_KEY, String(Date.now()));
       completeBtn.textContent = "Пройдено ✓";
       completeBtn.disabled = true;
       setTimeout(function () {
@@ -1201,7 +1287,7 @@
     console.log("activeCourseId:", getActiveCourseId());
     var config = getConfig();
     var themeId = "dark_premium";
-    var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false };
+    var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false, addon_designer_xp: false };
     try {
       courseSettings = await fetchCourseSettings(config);
       themeId = courseSettings.theme_id;
@@ -1279,7 +1365,7 @@ document.addEventListener("click", function (e) {
 
     try {
       var themeId = "dark_premium";
-      var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false };
+      var courseSettings = { theme_id: "dark_premium", addon_nutrition_calculator: false, addon_emotion_navigator: false, addon_designer_xp: false };
       try {
         courseSettings = await fetchCourseSettings(config);
         themeId = courseSettings.theme_id;
