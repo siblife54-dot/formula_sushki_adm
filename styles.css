@@ -1079,7 +1079,7 @@ body::-webkit-scrollbar {
   border: 1px solid color-mix(in srgb, var(--accent) 45%, var(--border));
   white-space: nowrap;
 }
-.designer-xp-level { margin: 0 0 5px; font-size: clamp(34px, 8.8vw, 40px); line-height: 1.05; letter-spacing: .2px; }
+.designer-xp-level { margin: 0 0 5px; font-size: clamp(28px, 7vw, 33px); line-height: 1; letter-spacing: .2px; }
 .designer-xp-rank { margin: 0 0 4px; color: color-mix(in srgb, var(--accent) 68%, white); font-size: 15px; font-weight: 700; }
 .designer-xp-meta { margin: 0 0 4px; color: var(--muted); font-size: 13px; }
 .designer-xp-progress { height: 6px; border-radius: 999px; overflow: hidden; background: rgba(255, 255, 255, 0.09); }
@@ -1091,7 +1091,7 @@ body::-webkit-scrollbar {
 }
 .designer-xp-progress { margin: 4px 0 9px; }
 .designer-xp-scale {
-  margin: 0 0 10px;
+  margin: 0 0 6px;
   padding: 0;
   list-style: none;
   display: grid;
@@ -1135,8 +1135,7 @@ body::-webkit-scrollbar {
 .designer-xp-scale li.is-current .designer-xp-step,
 .designer-xp-scale li.is-current .designer-xp-step-title { color: color-mix(in srgb, var(--accent) 70%, white); }
 .designer-xp-scale li.is-future { opacity: .65; }
-.designer-xp-achievements-title { margin: 2px 0 7px; font-size: clamp(30px, 7.8vw, 32px); font-weight: 700; line-height: 1.05; }
-.designer-xp-achievements { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.designer-xp-achievements { margin: 1px 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
 .designer-xp-achievements li {
   display: inline-flex;
   align-items: center;
@@ -1158,8 +1157,7 @@ body::-webkit-scrollbar {
 @media (max-width: 420px) {
   .designer-xp-card { border-radius: 18px; padding: 16px 16px 12px !important; margin-top: 10px; }
   .designer-xp-badge { font-size: 12px; padding: 5px 9px; max-width: 100%; }
-  .designer-xp-level { font-size: clamp(38px, 9.5vw, 42px); }
-  .designer-xp-achievements-title { font-size: clamp(30px, 7.8vw, 32px); }
+  .designer-xp-level { font-size: clamp(27px, 6.8vw, 31px); }
 }
 @media (max-width: 360px) {
   .designer-xp-scale li:not(.is-current) .designer-xp-step-title { display: none; }
