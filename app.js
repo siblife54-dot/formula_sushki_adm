@@ -735,28 +735,21 @@
     var targetXp = next ? next.minXp : maxXp;
     var progress = next ? Math.max(0, Math.min(100, Math.round(((xp - baseXp) / (targetXp - baseXp)) * 100))) : 100;
     var xpText = next ? (xp + " / " + next.minXp + " XP до следующего уровня") : (xp + " XP · Максимальный уровень достигнут");
-    var levelTrack = "Start / Junior / Visual / Product / Portfolio Ready";
-    var achievements = [
-      { title: "Первый экран", minLessons: 1 },
-      { title: "Работа с сетками", minLessons: 3 },
-      { title: "Портфолио", minLessons: 5 }
-    ];
 
     host.innerHTML = [
       '<section class="card designer-xp-card">',
       '<div class="designer-xp-header">',
-      '<div class="designer-xp-heading"><h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3><p class="designer-xp-track">' + levelTrack + '</p></div>',
+      '<div class="designer-xp-heading"><h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3><p class="designer-xp-track">' + escapeHtml(current.title) + '</p></div>',
       '<span class="designer-xp-badge">+50 XP за урок</span>',
       '</div>',
       '<p class="designer-xp-meta">' + xpText + '</p>',
       '<div class="designer-xp-progress"><div class="designer-xp-progress__fill" style="width:' + progress + '%"></div></div>',
-      '<p class="designer-xp-next">Следующий уровень: ' + escapeHtml(next ? next.title : "Максимальный уровень") + '</p>',
-      '<ul class="designer-xp-achievements">',
-      achievements.map(function (item) {
-        var unlocked = completedCount >= item.minLessons;
-        return '<li class="' + (unlocked ? "is-unlocked" : "is-locked") + '"><span class="designer-xp-achievement-icon">' + (unlocked ? "✅" : "🔒") + '</span><span>' + escapeHtml(item.title) + "</span></li>";
-      }).join(""),
-      '</ul>',
+      '<ol class="designer-xp-scale">',
+      model.levels.map(function (item) {
+        var state = xp >= item.minXp ? "is-active" : "";
+        return '<li class="' + state + '"><span class="designer-xp-scale__dot">Lv.' + item.level + '</span><span class="designer-xp-scale__label">' + escapeHtml(item.title) + '</span></li>';
+      }).join(''),
+      '</ol>',
       '</section>'
     ].join("");
 
