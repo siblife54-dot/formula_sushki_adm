@@ -765,7 +765,7 @@
       '<ul class="designer-xp-achievements">',
       achievements.map(function (item) {
         var unlocked = completedCount >= item.minLessons;
-        return '<li class="' + (unlocked ? "is-unlocked" : "is-locked") + '">' + (unlocked ? "✅" : "🔒") + " " + escapeHtml(item.title) + "</li>";
+        return '<li class="' + (unlocked ? "is-unlocked" : "is-locked") + '"><span class="designer-xp-achievement-icon">' + (unlocked ? "✅" : "🔒") + '</span><span>' + escapeHtml(item.title) + "</span></li>";
       }).join(""),
       '</ul>',
       '</section>'
