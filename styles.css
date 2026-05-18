@@ -1053,7 +1053,7 @@ body::-webkit-scrollbar {
   position: relative;
   border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
   border-radius: 18px;
-  padding: 16px !important;
+  padding: 12px 14px 14px !important;
   margin-top: 14px;
   height: auto;
   overflow: visible;
@@ -1062,13 +1062,11 @@ body::-webkit-scrollbar {
     linear-gradient(120deg, color-mix(in srgb, var(--card) 88%, #0b1e3a), color-mix(in srgb, var(--card-2) 92%, #081123));
   box-shadow: 0 18px 34px rgba(2, 8, 22, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 26px color-mix(in srgb, var(--accent) 24%, transparent);
 }
-.designer-xp-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin: 0 0 14px; }
-.designer-xp-label { margin: 0; font-size: 20px; line-height: 1; color: color-mix(in srgb, var(--accent) 72%, white); display: inline-flex; align-items: center; gap: 8px; }
-.designer-xp-label span { font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: .2px; }
+.designer-xp-top { display: flex; justify-content: flex-end; margin: 0 0 6px; }
 .designer-xp-badge {
   display: inline-flex;
   align-items: center;
-  padding: 7px 10px;
+  padding: 5px 9px;
   border-radius: 999px;
   font-size: 13px;
   font-weight: 600;
@@ -1153,10 +1151,8 @@ body::-webkit-scrollbar {
 }
 .designer-xp-achievements li.is-locked { opacity: .7; }
 @media (max-width: 420px) {
-  .designer-xp-card { border-radius: 18px; padding: 16px !important; }
-  .designer-xp-label { font-size: 18px; }
-  .designer-xp-label span { font-size: 20px; }
-  .designer-xp-badge { font-size: 13px; padding: 7px 10px; }
+  .designer-xp-card { border-radius: 18px; padding: 12px 14px 14px !important; }
+  .designer-xp-badge { font-size: 12px; padding: 5px 8px; max-width: 100%; }
   .designer-xp-level { font-size: 32px; }
   .designer-xp-achievements-title { font-size: 24px; }
 }

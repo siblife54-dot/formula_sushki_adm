@@ -750,7 +750,7 @@
 
     host.innerHTML = [
       '<section class="card designer-xp-card">',
-      '<div class="designer-xp-top"><p class="designer-xp-label">✦ <span>Designer XP</span></p><span class="designer-xp-badge">+50 XP за урок</span></div>',
+      '<div class="designer-xp-top"><span class="designer-xp-badge">+50 XP за урок</span></div>',
       '<h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3>',
       '<p class="designer-xp-rank">' + current.title + '</p>',
       '<p class="designer-xp-meta">' + xpText + '</p>',
