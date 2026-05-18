@@ -763,7 +763,6 @@
         return '<li class="' + state + '"><span class="designer-xp-dot"></span><span class="designer-xp-step">Lv.' + item.level + '</span><span class="designer-xp-step-title">' + escapeHtml(levelLabels[item.level] || item.title) + '</span></li>';
       }).join(""),
       '</ol>',
-      '<p class="designer-xp-achievements-title">Достижения</p>',
       '<ul class="designer-xp-achievements">',
       achievements.map(function (item) {
         var unlocked = completedCount >= item.minLessons;
