@@ -742,8 +742,6 @@
       4: "Product",
       5: "Portfolio Ready"
     };
-    var fullTrackLabel = model.levels.map(function (item) { return levelLabels[item.level] || item.title; }).join(" / ");
-    var nextLevelTitle = next ? (levelLabels[next.level] || next.title) : "Максимум достигнут";
     var achievements = [
       { title: "Первый экран", minLessons: 1 },
       { title: "Работа с сетками", minLessons: 3 },
@@ -752,16 +750,18 @@
 
     host.innerHTML = [
       '<section class="card designer-xp-card">',
-      '<div class="designer-xp-head">',
-      '<div class="designer-xp-head-copy">',
+      '<span class="designer-xp-badge">+50 XP за урок</span>',
       '<h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3>',
-      '<p class="designer-xp-rank">' + escapeHtml(fullTrackLabel) + '</p>',
-      '</div>',
-      '<span class="designer-xp-badge">+50 XP / урок</span>',
-      '</div>',
-      '<p class="designer-xp-meta">' + xpText + "</p>",
+      '<p class="designer-xp-rank">' + current.title + '</p>',
+      '<p class="designer-xp-meta">' + xpText + '</p>',
       '<div class="designer-xp-progress"><div class="designer-xp-progress__fill" style="width:' + progress + '%"></div></div>',
-      '<p class="designer-xp-next-level">Следующий уровень: <span>' + escapeHtml(nextLevelTitle) + "</span></p>",
+      '<ol class="designer-xp-scale">',
+      model.levels.map(function (item) {
+        var state = current.level > item.level ? "is-passed" : (current.level === item.level ? "is-current" : "is-future");
+        return '<li class="' + state + '"><span class="designer-xp-dot"></span><span class="designer-xp-step">Lv.' + item.level + '</span><span class="designer-xp-step-title">' + escapeHtml(levelLabels[item.level] || item.title) + '</span></li>';
+      }).join(""),
+      '</ol>',
+      '<p class="designer-xp-achievements-title">Достижения</p>',
       '<ul class="designer-xp-achievements">',
       achievements.map(function (item) {
         var unlocked = completedCount >= item.minLessons;
