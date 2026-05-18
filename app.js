@@ -735,13 +735,7 @@
     var targetXp = next ? next.minXp : maxXp;
     var progress = next ? Math.max(0, Math.min(100, Math.round(((xp - baseXp) / (targetXp - baseXp)) * 100))) : 100;
     var xpText = next ? (xp + " / " + next.minXp + " XP до следующего уровня") : (xp + " XP · Максимальный уровень достигнут");
-    var levelLabels = {
-      1: "Start",
-      2: "Junior",
-      3: "Visual",
-      4: "Product",
-      5: "Portfolio Ready"
-    };
+    var levelTrack = "Start / Junior / Visual / Product / Portfolio Ready";
     var achievements = [
       { title: "Первый экран", minLessons: 1 },
       { title: "Работа с сетками", minLessons: 3 },
@@ -751,18 +745,12 @@
     host.innerHTML = [
       '<section class="card designer-xp-card">',
       '<div class="designer-xp-header">',
-      '<h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3>',
+      '<div class="designer-xp-heading"><h3 class="designer-xp-level">Designer Lv.' + current.level + '</h3><p class="designer-xp-track">' + levelTrack + '</p></div>',
       '<span class="designer-xp-badge">+50 XP за урок</span>',
       '</div>',
-      '<p class="designer-xp-rank">' + current.title + '</p>',
       '<p class="designer-xp-meta">' + xpText + '</p>',
       '<div class="designer-xp-progress"><div class="designer-xp-progress__fill" style="width:' + progress + '%"></div></div>',
-      '<ol class="designer-xp-scale">',
-      model.levels.map(function (item) {
-        var state = current.level > item.level ? "is-passed" : (current.level === item.level ? "is-current" : "is-future");
-        return '<li class="' + state + '"><span class="designer-xp-dot"></span><span class="designer-xp-step">Lv.' + item.level + '</span><span class="designer-xp-step-title">' + escapeHtml(levelLabels[item.level] || item.title) + '</span></li>';
-      }).join(""),
-      '</ol>',
+      '<p class="designer-xp-next">Следующий уровень: ' + escapeHtml(next ? next.title : "Максимальный уровень") + '</p>',
       '<ul class="designer-xp-achievements">',
       achievements.map(function (item) {
         var unlocked = completedCount >= item.minLessons;
