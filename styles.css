@@ -1051,6 +1051,8 @@ body::-webkit-scrollbar {
 
 .designer-xp-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   border: 1px solid color-mix(in srgb, var(--accent) 44%, var(--border));
   border-radius: 18px;
   padding: 14px 16px !important;
@@ -1062,9 +1064,10 @@ body::-webkit-scrollbar {
     linear-gradient(120deg, color-mix(in srgb, var(--card) 88%, #0b1e3a), color-mix(in srgb, var(--card-2) 92%, #081123));
   box-shadow: 0 18px 34px rgba(2, 8, 22, 0.46), inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 0 26px color-mix(in srgb, var(--accent) 24%, transparent);
 }
-.designer-xp-top { display: flex; justify-content: flex-end; margin: 0 0 8px; }
 .designer-xp-badge {
   display: inline-flex;
+  align-self: flex-end;
+  margin: 0 0 6px;
   align-items: center;
   padding: 6px 10px;
   border-radius: 999px;
